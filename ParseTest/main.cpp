@@ -24,7 +24,7 @@ int main(int argc, const char * argv[]) {
 	std::ifstream file(argv[1]);
 	LDParse::Lexer lex(file, &err);
 	std::vector<LDParse::Token> line;
-	while((line = lex.lexLine()).size() == 0 || line[0].k != LDParse::T_EOF ){
+	while(lex.lexLine(line)){
 		for(size_t i = 0; i < line.size(); i++){
 			std::cout << line[i];
 		}

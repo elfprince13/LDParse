@@ -15,7 +15,7 @@
 #include <vector>
 #include <map>
 
-#include <boost/variant/variant.hpp>
+#include <boost/variant.hpp>
 
 namespace LDParse {
 	
@@ -34,20 +34,12 @@ namespace LDParse {
 		CW = true
 	} OrientationT;
 	
-	typedef struct TVU { // A lot more memory intensive than need be. Investigate boost::variant options.
-		const char * kw ;
-		std::string s;
-		OrientationT o;
-		float f;
-		int32_t i;
-		TVU() { clear(); }
-		void clear() {  kw = nullptr; s = ""; o = CCW; f = 0; i = 0; }
-	} TokenValue;
 	
 	struct Token;
 	
 	std::ostream &operator<<(std::ostream &out, const Token &o);
 	
+	typedef boost::variant<const char *, std::string, OrientationT, float, int32_t> TokenValue;
 	struct Token {
 		TokenKind k;
 		TokenValue v;
@@ -68,7 +60,7 @@ namespace LDParse {
 		std::istream& mInput;
 		ErrFType mErrHandler;
 		Lexer(std::istream &input, ErrFType errHandler) : mInput(input), mErrHandler(errHandler) {mInput >> std::noskipws;}
-		std::vector<Token> lexLine(LexState start = Lex);
+		bool lexLine(std::vector<Token> &line, LexState start = Lex);
 		
 	private:
 		

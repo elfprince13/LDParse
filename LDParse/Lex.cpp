@@ -29,20 +29,20 @@ namespace LDParse {
 			case Zero...Five:
 			case DecInt:
 			case HexInt:
-				out << o.v.i;
+				out << boost::get<int32_t>(o.v);
 				break;
 			case Float:
-				out << o.v.f;
+				out << boost::get<float>(o.v);
 				break;
 			case Orientation:
-				out << (bool)(o.v.o);
+				out << (bool)boost::get<OrientationT>(o.v);
 				break;
 			case Ident:
 			case Garbage:
-				out << o.v.s;
+				out << boost::get<std::string>(o.v);
 				break;
 			default:
-				out << o.v.kw;
+				out << boost::get<const char *>(o.v);
 		}
 		out << ")\t";
 		return out;
@@ -59,14 +59,15 @@ namespace LDParse {
 	};
 
 	
-	std::vector<Token> Lexer::lexLine(LexState start) {
+	bool Lexer::lexLine(std::vector<Token> &lineV, LexState start) {
 		LexState state = start;
-		std::vector<Token> ret;
+		bool ret = true;
 		Token cur;
-		ret.clear();
+		lineV.clear();
 		if(mInput.eof()){
 			cur.k = T_EOF;
-			ret.push_back(cur);
+			lineV.push_back(cur);
+			ret = false;
 		} else {
 			std::string line;
 			std::string tokText("");
@@ -80,9 +81,9 @@ namespace LDParse {
 						switch(next){
 							case '"':
 								cur.k = Ident;
-								cur.v.s = std::string(tokText);
+								cur.v = tokText;
 								lineStream >> std::skipws;
-								ret.push_back(cur);
+								lineV.push_back(cur);
 								break;
 							default:
 								tokText += next;
@@ -100,9 +101,9 @@ namespace LDParse {
 							}
 						}
 						safeGetline(lineStream, tokText);
-						cur.v.s = std::string(tokText);
+						cur.v = tokText;
 						cur.k = Garbage;
-						ret.push_back(cur);
+						lineV.push_back(cur);
 						break;
 						
 					default:
@@ -125,28 +126,36 @@ namespace LDParse {
 									}
 									push = false;
 									break;
-								case '#':
+								case '#': {
 									cur.k = HexInt;
-									push = parseHexFromOffset(tokText, 1, cur.v.i);
+									int32_t i;
+									push = parseHexFromOffset(tokText, 1, i);
+									cur.v = i;
 									break;
+								}
 								case '0':
 									// We know this can't be a single 0, or else we would have recognized it as a key word!
 									if(tokText[1] == 'x'){
 										cur.k = HexInt;
-										push = parseHexFromOffset(tokText, 2, cur.v.i);
+										int32_t i;
+										push = parseHexFromOffset(tokText, 2, i);
+										cur.v = i;
 										break;
 									}
 								case '1'...'9':
 								case '+':
 								case '-':
 								case '.': {
-									cur.k = Float;
-									bool parsed = parseFloat(tokText, cur.v.f);
+									float fVal;
+									bool parsed = parseFloat(tokText, fVal);
 									if(parsed){
-										uint32_t intVal = cur.v.f;
-										if(intVal == cur.v.f){
+										int32_t intVal = fVal;
+										if(intVal == fVal){
 											cur.k = DecInt;
-											cur.v.i = intVal;
+											cur.v = intVal;
+										} else {
+											cur.k = Float;
+											cur.v = fVal;
 										}
 									} else {
 										goto LEXED_GARBAGE;
@@ -158,39 +167,38 @@ namespace LDParse {
 									if(find_if(tokText.begin(), tokText.end(),
 											   [](char c) { return !isalnum(c); }) == tokText.end()) {
 										cur.k = Ident;
-										cur.v.s = std::string(tokText);
+										cur.v = tokText;
 										break;
 									}
 								default:
 								LEXED_GARBAGE:
 									cur.k = Garbage;
-									cur.v.s = std::string(tokText);
+									cur.v = tokText;
 							}
 						} else {
 							const TokenKind kind = kindIt->second;
 							cur.k = kind;
 							switch(kind){
 								case Zero: case One: case Two: case Three: case Four: case Five:
-									cur.v.i = kind;
+									cur.v = kind; break;
 								case Step: case Pause: case Write /*Print*/: case Clear: case Save:
 								case Colour: case Code: case Value: case Edge: case Alpha: case Luminance:
 								case Chrome: case Pearlescent: case Rubber: case MatteMetallic: case Metal: case Material:
 								case File: case NoFile:
 								case BFC: case Certify: case NoCertify: case Clip: case NoClip: case InvertNext:
-									cur.v.kw = kindIt->first.c_str(); // This should persist, because it's in the table
+									cur.v = kindIt->first.c_str(); // This should persist, because it's in the table
 									break;
 								case Orientation:
-									cur.v.o = (tokText.length() - 2) ? CCW : CW;
+									cur.v = (tokText.length() - 2) ? CCW : CW;
 									break;
 								default:
 									push = false;
 									mErrHandler("Found keyword entry in Lexer::keywordMap, but unknown keyword", tokText, true);
 							}
 						}
-						if(push) ret.push_back(cur);
+						if(push) lineV.push_back(cur);
 				}
 			}
-			cur.v.clear();
 		}
 		
 		return ret;
