@@ -64,11 +64,11 @@ namespace LDParse {
 		
 	private:
 		
-		bool parseHexFromOffset(std::string &src, size_t ofs, int32_t &dst){
+		bool parseHexFromOffset(std::string &src, size_t ofs, int32_t &dst, bool expect = false){
 			bool ret;
 			int ct = sscanf(src.c_str() + ofs, "%x", &dst);
 			if(ct != 1){
-				mErrHandler("Couldn't parse hex int", src, true);
+				if(expect) mErrHandler("Couldn't parse hex int", src, true);
 				ret = false;
 			} else {
 				ret = true;
@@ -78,11 +78,11 @@ namespace LDParse {
 		
 		
 		
-		bool parseFloat(std::string &src, float &dst){
+		bool parseFloat(std::string &src, float &dst, bool expect = false){
 			bool ret;
 			int ct = sscanf(src.c_str(), "%f", &dst);
 			if(ct != 1){
-				mErrHandler("Couldn't parse float", src, true);
+				if(expect) mErrHandler("Couldn't parse float", src, true);
 				ret = false;
 			} else {
 				ret = true;

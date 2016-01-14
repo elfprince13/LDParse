@@ -127,28 +127,33 @@ namespace LDParse {
 									push = false;
 									break;
 								case '#': {
-									cur.k = HexInt;
 									int32_t i;
-									push = parseHexFromOffset(tokText, 1, i);
-									cur.v = i;
-									break;
+									if (parseHexFromOffset(tokText, 1, i)){
+										cur.k = HexInt;
+										cur.v = i;
+										break;
+									} else {
+										goto LEXED_GARBAGE;
+									}
 								}
 								case '0':
 									// We know this can't be a single 0, or else we would have recognized it as a key word!
 									if(tokText[1] == 'x'){
-										cur.k = HexInt;
 										int32_t i;
-										push = parseHexFromOffset(tokText, 2, i);
-										cur.v = i;
-										break;
+										if (parseHexFromOffset(tokText, 2, i)){
+											cur.k = HexInt;
+											cur.v = i;
+											break;
+										} else {
+											goto LEXED_GARBAGE;
+										}
 									}
 								case '1'...'9':
 								case '+':
 								case '-':
 								case '.': {
 									float fVal;
-									bool parsed = parseFloat(tokText, fVal);
-									if(parsed){
+									if(parseFloat(tokText, fVal)){
 										int32_t intVal = fVal;
 										if(intVal == fVal){
 											cur.k = DecInt;
@@ -157,10 +162,10 @@ namespace LDParse {
 											cur.k = Float;
 											cur.v = fVal;
 										}
+										break;
 									} else {
 										goto LEXED_GARBAGE;
 									}
-									break;
 								}
 								case 'a'...'z':
 								case 'A'...'Z':
