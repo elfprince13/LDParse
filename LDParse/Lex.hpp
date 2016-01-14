@@ -70,11 +70,16 @@ namespace LDParse {
 		
 		bool parseHexFromOffset(std::string &src, size_t ofs, int32_t &dst, bool expect = false){
 			bool ret;
-			int ct = sscanf(src.c_str() + ofs, "%x", &dst);
-			if(ct != 1){
+			ptrdiff_t charCt = src.length() - ofs;
+			const char* src_ptr = src.c_str() + ofs;
+			char* end_ptr;
+			long lVal = strtol(src_ptr, &end_ptr, 16);
+			if(charCt != (end_ptr - src_ptr)){
 				if(expect) mErrHandler("Couldn't parse hex int", src, true);
 				ret = false;
 			} else {
+				dst = (int32_t)lVal;
+				if(dst != lVal) mErrHandler("Parsed a long, but it had to be truncated", src, false);
 				ret = true;
 			}
 			return ret;
@@ -86,9 +91,9 @@ namespace LDParse {
 			bool ret;
 			ptrdiff_t charCt = src.length();
 			const char* src_ptr = src.c_str();
-			char** end_ptr;
-			dst = strtof(src_ptr, end_ptr);
-			if(charCt != (*end_ptr - src_ptr)){
+			char* end_ptr;
+			dst = strtof(src_ptr, &end_ptr);
+			if(charCt != (end_ptr - src_ptr)){
 				if(expect) mErrHandler("Couldn't parse float", src, true);
 				ret = false;
 			} else {
