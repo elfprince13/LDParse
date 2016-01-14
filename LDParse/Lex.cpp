@@ -23,28 +23,32 @@ namespace LDParse {
 	
 	*/
 	
-	std::ostream &operator<<(std::ostream &out, const Token &o) {
-		out << "(" << o.k << " ";
-		switch(o.k){
+	const std::string Token::textRepr() const {
+		std::ostringstream out("");
+		switch(k){
 			case Zero...Five:
 			case DecInt:
 			case HexInt:
-				out << boost::get<int32_t>(o.v);
+				out << boost::get<int32_t>(v);
 				break;
 			case Float:
-				out << boost::get<float>(o.v);
+				out << boost::get<float>(v);
 				break;
 			case Orientation:
-				out << (bool)boost::get<OrientationT>(o.v);
+				out << (boost::get<OrientationT>(v) ? "CW" : "CCW");
 				break;
 			case Ident:
 			case Garbage:
-				out << boost::get<std::string>(o.v);
+				out << boost::get<std::string>(v);
 				break;
 			default:
-				out << boost::get<const char *>(o.v);
+				out << boost::get<const char *>(v);
 		}
-		out << ")\t";
+		return out.str();
+	}
+	
+	std::ostream &operator<<(std::ostream &out, const Token &o) {
+		out << "(" << o.k << " " << o.textRepr() << ")\t";
 		return out;
 		}
 	
@@ -109,38 +113,29 @@ namespace LDParse {
 					default:
 						const std::streampos posHere = lineStream.tellg();
 						lineStream >> tokText;
-						auto kindIt = keywordMap.find(tokText);
-						bool push = true;
-						if(kindIt == keywordMap.end()) {
-							switch(tokText[0]) {
-								case '"':
-									lineStream.clear();
-									lineStream.seekg(posHere);
-									lineStream >> std::noskipws;
-									lineStream.ignore(1,'"');
-									if(lineStream.gcount() == 1) {
-										state = String;
-										tokText = "";
-									} else {
-										mErrHandler("Something has gone very wrong while parsing a string", tokText, true);
-									}
-									push = false;
-									break;
-								case '#': {
-									int32_t i;
-									if (parseHexFromOffset(tokText, 1, i)){
-										cur.k = HexInt;
-										cur.v = i;
+						if(lineStream.fail()){
+							break; // We weren't EOL yet, but only whitespace was left.
+						} else {
+							bool push = true;
+							auto kindIt = keywordMap.find(tokText);
+							if(kindIt == keywordMap.end()) {
+								switch(tokText[0]) {
+									case '"':
+										lineStream.clear();
+										lineStream.seekg(posHere);
+										lineStream >> std::noskipws;
+										lineStream.ignore(1,'"');
+										if(lineStream.gcount() == 1) {
+											state = String;
+											tokText = "";
+										} else {
+											mErrHandler("Something has gone very wrong while parsing a string", tokText, true);
+										}
+										push = false;
 										break;
-									} else {
-										goto LEXED_GARBAGE;
-									}
-								}
-								case '0':
-									// We know this can't be a single 0, or else we would have recognized it as a key word!
-									if(tokText[1] == 'x'){
+									case '#': {
 										int32_t i;
-										if (parseHexFromOffset(tokText, 2, i)){
+										if (parseHexFromOffset(tokText, 1, i)){
 											cur.k = HexInt;
 											cur.v = i;
 											break;
@@ -148,64 +143,172 @@ namespace LDParse {
 											goto LEXED_GARBAGE;
 										}
 									}
-								case '1'...'9':
-								case '+':
-								case '-':
-								case '.': {
-									float fVal;
-									if(parseFloat(tokText, fVal)){
-										int32_t intVal = fVal;
-										if(intVal == fVal){
-											cur.k = DecInt;
-											cur.v = intVal;
-										} else {
-											cur.k = Float;
-											cur.v = fVal;
+									case '0':
+										// We know this can't be a single 0, or else we would have recognized it as a key word!
+										if(tokText[1] == 'x'){
+											int32_t i;
+											if (parseHexFromOffset(tokText, 2, i)){
+												cur.k = HexInt;
+												cur.v = i;
+												break;
+											} else {
+												goto LEXED_GARBAGE;
+											}
 										}
-										break;
-									} else {
-										goto LEXED_GARBAGE;
+									case '1'...'9':
+									case '+':
+									case '-':
+									case '.': {
+										float fVal;
+										if(parseFloat(tokText, fVal)){
+											int32_t intVal = fVal;
+											if(intVal == fVal){
+												cur.k = DecInt;
+												cur.v = intVal;
+											} else {
+												cur.k = Float;
+												cur.v = fVal;
+											}
+											break;
+										} else {
+											goto LEXED_GARBAGE;
+										}
 									}
-								}
-								case 'a'...'z':
-								case 'A'...'Z':
-									if(find_if(tokText.begin(), tokText.end(),
-											   [](char c) { return !isalnum(c); }) == tokText.end()) {
-										cur.k = Ident;
+									case 'a'...'z':
+									case 'A'...'Z':
+										if(find_if(tokText.begin(), tokText.end(),
+												   [](char c) { return !isalnum(c); }) == tokText.end()) {
+											cur.k = Ident;
+											cur.v = tokText;
+											break;
+										}
+									default:
+									LEXED_GARBAGE:
+										cur.k = Garbage;
 										cur.v = tokText;
-										break;
-									}
-								default:
-								LEXED_GARBAGE:
-									cur.k = Garbage;
-									cur.v = tokText;
+								}
+							} else {
+								const TokenKind kind = kindIt->second;
+								cur.k = kind;
+								switch(kind){
+									case Zero: case One: case Two: case Three: case Four: case Five:
+										cur.v = kind; break;
+									case Step: case Pause: case Write /*Print*/: case Clear: case Save:
+									case Colour: case Code: case Value: case Edge: case Alpha: case Luminance:
+									case Chrome: case Pearlescent: case Rubber: case MatteMetallic: case Metal: case Material:
+									case File: case NoFile:
+									case BFC: case Certify: case NoCertify: case Clip: case NoClip: case InvertNext:
+										cur.v = kindIt->first.c_str() /* This should persist, because it's in the table */;	break;
+									case Orientation:
+										cur.v = (tokText.length() - 2) ? CCW : CW;	break;
+									default:
+										push = false;
+										mErrHandler("Found keyword entry in Lexer::keywordMap, but unknown keyword", tokText, true);
+								}
 							}
-						} else {
-							const TokenKind kind = kindIt->second;
-							cur.k = kind;
-							switch(kind){
-								case Zero: case One: case Two: case Three: case Four: case Five:
-									cur.v = kind; break;
-								case Step: case Pause: case Write /*Print*/: case Clear: case Save:
-								case Colour: case Code: case Value: case Edge: case Alpha: case Luminance:
-								case Chrome: case Pearlescent: case Rubber: case MatteMetallic: case Metal: case Material:
-								case File: case NoFile:
-								case BFC: case Certify: case NoCertify: case Clip: case NoClip: case InvertNext:
-									cur.v = kindIt->first.c_str(); // This should persist, because it's in the table
-									break;
-								case Orientation:
-									cur.v = (tokText.length() - 2) ? CCW : CW;
-									break;
-								default:
-									push = false;
-									mErrHandler("Found keyword entry in Lexer::keywordMap, but unknown keyword", tokText, true);
-							}
+							if(push) lineV.push_back(cur);
 						}
-						if(push) lineV.push_back(cur);
 				}
 			}
 		}
-		
 		return ret;
+	}
+	
+	bool Lexer::lexModelBoundaries(std::map<std::string, std::vector<std::vector<Token> > > &models, std::string &root, bool rewind){
+		typedef enum : uint8_t {
+			First = 0,
+			Second = 1,
+			YTail = 2,
+			ITail = 3,
+			NTail = 4
+		} LineState;
+		if(!(mInput.tellg() == mBOF || rewind)){
+			mErrHandler("Lexing model boundaries, but not at beginning of file and not asked to rewind", "", false);
+		} else if (rewind) {
+			mInput.clear(); mInput.seekg(mBOF);
+		}
+		std::vector<std::vector<Token> > fileContents;
+		std::vector<Token> lineContents;
+		fileContents.clear();
+		lineContents.clear();
+		std::string fileName(root);
+		bool inFile = true;
+		size_t fileCt = 0;
+		
+		auto storeFile = [&](){
+			models[fileName] = fileContents;
+			if(fileCt == 1) root = fileName;
+			fileName = "";
+			fileContents.clear();
+		};
+		
+		while(lexLine(lineContents, inFile ? Lex : Discard)){
+			LineState state = First;
+			for(auto it = lineContents.begin(); state < ITail && it != lineContents.end(); ++it){
+				switch(state){
+					case First:
+						switch(it->k){
+							case Zero:
+								state = Second;
+								break;
+							default:
+								state = NTail;
+						}
+						break;
+					case Second:
+						switch(it->k){
+							case File:
+								if(inFile) storeFile();
+								if(!(fileCt++) && fileContents.size()){
+									mErrHandler("LDR commands found before first model. Previous commands will be discarded", it->textRepr(), false);
+									fileContents.clear();
+								}
+								fileName = "";
+								inFile = true;
+								state = YTail;
+								break;
+							case NoFile: {
+								bool pInFile = inFile;
+								inFile = false;
+								if(fileCt){
+									if(pInFile){
+										state = NTail;
+										break;
+									}
+								} else {
+									mErrHandler("MPD command found before first model. Previous commands will be discarded",it->textRepr(), false);
+									fileContents.clear();
+								}
+							}
+							default:
+								state = ITail;
+						}
+						break;
+					case YTail:
+						if(fileName.length()) fileName += " ";
+						fileName += it->textRepr();
+						if(!fileName.compare("32524.dat")){
+							mErrHandler("stop here", "", false);
+						}
+						break;
+					default:
+						mErrHandler("Loop invariant failed. Something is wrong,", it->textRepr(), false);
+				}
+			}
+			if(inFile || state == NTail){
+				fileContents.push_back(lineContents);
+			}
+			
+			if(fileContents.size() && !inFile){
+				storeFile();
+			}
+		}
+		
+		if (inFile) {
+			models[fileName] = fileContents;
+			if(fileCt <= 1) root = fileName;
+		}
+		
+		return fileCt;
 	}
 };

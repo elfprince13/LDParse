@@ -43,24 +43,28 @@ namespace LDParse {
 	struct Token {
 		TokenKind k;
 		TokenValue v;
+		const std::string textRepr() const;
 		friend std::ostream &operator<<(std::ostream &out, const Token &o);
 	};
 	
 	class Lexer {
 	public:
-		
+		typedef void (*ErrFType)(std::string msg, std::string tokText, bool fatal);
+	private:
+		std::istream& mInput;
+		const std::streampos mBOF;
+		ErrFType mErrHandler;
+	public:
 		typedef enum {
 			Lex, String, Discard
 		} LexState;
 		
 		static const std::map<std::string, TokenKind> keywordMap;
 		
-		typedef void (*ErrFType)(std::string msg, std::string tokText, bool fatal);
 		
-		std::istream& mInput;
-		ErrFType mErrHandler;
-		Lexer(std::istream &input, ErrFType errHandler) : mInput(input), mErrHandler(errHandler) {mInput >> std::noskipws;}
+		Lexer(std::istream &input, ErrFType errHandler) : mInput(input), mErrHandler(errHandler), mBOF(mInput.tellg()) {mInput >> std::noskipws;}
 		bool lexLine(std::vector<Token> &line, LexState start = Lex);
+		bool lexModelBoundaries(std::map<std::string, std::vector<std::vector<Token> > > &models, std::string &root, bool rewind = true);
 		
 	private:
 		
@@ -80,8 +84,11 @@ namespace LDParse {
 		
 		bool parseFloat(std::string &src, float &dst, bool expect = false){
 			bool ret;
-			int ct = sscanf(src.c_str(), "%f", &dst);
-			if(ct != 1){
+			ptrdiff_t charCt = src.length();
+			const char* src_ptr = src.c_str();
+			char** end_ptr;
+			dst = strtof(src_ptr, end_ptr);
+			if(charCt != (*end_ptr - src_ptr)){
 				if(expect) mErrHandler("Couldn't parse float", src, true);
 				ret = false;
 			} else {

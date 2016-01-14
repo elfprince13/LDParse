@@ -21,14 +21,30 @@ int main(int argc, const char * argv[]) {
 		std::cerr << "Requires a filename to run" << std::endl;
 		exit(-1);
 	}
-	std::ifstream file(argv[1]);
+	std::string fileName = argv[1];
+	std::ifstream file(fileName);
 	LDParse::Lexer lex(file, &err);
 	std::vector<LDParse::Token> line;
-	while(lex.lexLine(line)){
-		for(size_t i = 0; i < line.size(); i++){
-			std::cout << line[i];
+	
+	std::string rootName = fileName;
+	
+	std::map<std::string, std::vector<std::vector<LDParse::Token> > > models;
+	
+	bool isMPD = lex.lexModelBoundaries(models, rootName);
+	
+	
+	std::cout << "Model " << fileName << " is " << (isMPD ? "" : "not ") << " an MPD" << std::endl;
+	if(isMPD) std::cout << "\t" << "root model is " << rootName << std::endl << std::endl;
+	
+	for(auto it = models.begin(); it != models.end(); ++it){
+		if(isMPD) std::cout << "// " << (it->first.compare(rootName) ? "sub" : "root") << "-model, " << it->first << std::endl << std::endl;
+		for(auto fIt = it->second.begin(); fIt != it->second.end(); ++fIt){
+			for(size_t i = 0; i < fIt->size(); i++){
+				std::cout << (*fIt)[i];
+			}
+			std::cout << std::endl;
 		}
-		std::cout << std::endl;
+		std::cout << std::endl << std::endl;
 	}
 	
 	
