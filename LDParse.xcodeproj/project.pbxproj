@@ -10,13 +10,43 @@
 		E9DD320A1C46E06C00F2AE54 /* LDParse.hpp in Headers */ = {isa = PBXBuildFile; fileRef = E9DD32091C46E06C00F2AE54 /* LDParse.hpp */; };
 		E9DD320C1C46E06C00F2AE54 /* LDParsePriv.hpp in Headers */ = {isa = PBXBuildFile; fileRef = E9DD320B1C46E06C00F2AE54 /* LDParsePriv.hpp */; };
 		E9DD320E1C46E06C00F2AE54 /* LDParse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E9DD320D1C46E06C00F2AE54 /* LDParse.cpp */; };
+		E9DD32161C46E0A600F2AE54 /* Lex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E9DD32141C46E0A600F2AE54 /* Lex.cpp */; };
+		E9DD32171C46E0A600F2AE54 /* Lex.hpp in Headers */ = {isa = PBXBuildFile; fileRef = E9DD32151C46E0A600F2AE54 /* Lex.hpp */; };
+		E9DD321F1C4713EF00F2AE54 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E9DD321E1C4713EF00F2AE54 /* main.cpp */; };
+		E9DD32251C47140E00F2AE54 /* libLDParse.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E9DD32061C46E06C00F2AE54 /* libLDParse.a */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E9DD32231C47140B00F2AE54 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E9DD31FE1C46E06C00F2AE54 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E9DD32051C46E06C00F2AE54;
+			remoteInfo = LDParse;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		E9DD321A1C4713EF00F2AE54 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		E9DD32061C46E06C00F2AE54 /* libLDParse.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libLDParse.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		E9DD32091C46E06C00F2AE54 /* LDParse.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = LDParse.hpp; sourceTree = "<group>"; };
 		E9DD320B1C46E06C00F2AE54 /* LDParsePriv.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = LDParsePriv.hpp; sourceTree = "<group>"; };
 		E9DD320D1C46E06C00F2AE54 /* LDParse.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = LDParse.cpp; sourceTree = "<group>"; };
+		E9DD32141C46E0A600F2AE54 /* Lex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Lex.cpp; sourceTree = "<group>"; };
+		E9DD32151C46E0A600F2AE54 /* Lex.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Lex.hpp; sourceTree = "<group>"; };
+		E9DD321C1C4713EF00F2AE54 /* ParseTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ParseTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E9DD321E1C4713EF00F2AE54 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -27,6 +57,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E9DD32191C4713EF00F2AE54 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E9DD32251C47140E00F2AE54 /* libLDParse.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -34,6 +72,7 @@
 			isa = PBXGroup;
 			children = (
 				E9DD32081C46E06C00F2AE54 /* LDParse */,
+				E9DD321D1C4713EF00F2AE54 /* ParseTest */,
 				E9DD32071C46E06C00F2AE54 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -42,6 +81,7 @@
 			isa = PBXGroup;
 			children = (
 				E9DD32061C46E06C00F2AE54 /* libLDParse.a */,
+				E9DD321C1C4713EF00F2AE54 /* ParseTest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -52,8 +92,18 @@
 				E9DD32091C46E06C00F2AE54 /* LDParse.hpp */,
 				E9DD320B1C46E06C00F2AE54 /* LDParsePriv.hpp */,
 				E9DD320D1C46E06C00F2AE54 /* LDParse.cpp */,
+				E9DD32141C46E0A600F2AE54 /* Lex.cpp */,
+				E9DD32151C46E0A600F2AE54 /* Lex.hpp */,
 			);
 			path = LDParse;
+			sourceTree = "<group>";
+		};
+		E9DD321D1C4713EF00F2AE54 /* ParseTest */ = {
+			isa = PBXGroup;
+			children = (
+				E9DD321E1C4713EF00F2AE54 /* main.cpp */,
+			);
+			path = ParseTest;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -63,6 +113,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E9DD32171C46E0A600F2AE54 /* Lex.hpp in Headers */,
 				E9DD320A1C46E06C00F2AE54 /* LDParse.hpp in Headers */,
 				E9DD320C1C46E06C00F2AE54 /* LDParsePriv.hpp in Headers */,
 			);
@@ -88,6 +139,24 @@
 			productReference = E9DD32061C46E06C00F2AE54 /* libLDParse.a */;
 			productType = "com.apple.product-type.library.static";
 		};
+		E9DD321B1C4713EF00F2AE54 /* ParseTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E9DD32201C4713EF00F2AE54 /* Build configuration list for PBXNativeTarget "ParseTest" */;
+			buildPhases = (
+				E9DD32181C4713EF00F2AE54 /* Sources */,
+				E9DD32191C4713EF00F2AE54 /* Frameworks */,
+				E9DD321A1C4713EF00F2AE54 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E9DD32241C47140B00F2AE54 /* PBXTargetDependency */,
+			);
+			name = ParseTest;
+			productName = ParseTest;
+			productReference = E9DD321C1C4713EF00F2AE54 /* ParseTest */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -98,6 +167,9 @@
 				ORGANIZATIONNAME = "StickFigure Graphic Productions";
 				TargetAttributes = {
 					E9DD32051C46E06C00F2AE54 = {
+						CreatedOnToolsVersion = 7.2;
+					};
+					E9DD321B1C4713EF00F2AE54 = {
 						CreatedOnToolsVersion = 7.2;
 					};
 				};
@@ -115,6 +187,7 @@
 			projectRoot = "";
 			targets = (
 				E9DD32051C46E06C00F2AE54 /* LDParse */,
+				E9DD321B1C4713EF00F2AE54 /* ParseTest */,
 			);
 		};
 /* End PBXProject section */
@@ -125,10 +198,27 @@
 			buildActionMask = 2147483647;
 			files = (
 				E9DD320E1C46E06C00F2AE54 /* LDParse.cpp in Sources */,
+				E9DD32161C46E0A600F2AE54 /* Lex.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E9DD32181C4713EF00F2AE54 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E9DD321F1C4713EF00F2AE54 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E9DD32241C47140B00F2AE54 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E9DD32051C46E06C00F2AE54 /* LDParse */;
+			targetProxy = E9DD32231C47140B00F2AE54 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		E9DD320F1C46E06C00F2AE54 /* Debug */ = {
@@ -216,6 +306,7 @@
 				EXECUTABLE_PREFIX = lib;
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
 				GCC_ENABLE_CPP_RTTI = YES;
+				HEADER_SEARCH_PATHS = /opt/local/include;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -226,6 +317,21 @@
 				EXECUTABLE_PREFIX = lib;
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
 				GCC_ENABLE_CPP_RTTI = YES;
+				HEADER_SEARCH_PATHS = /opt/local/include;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		E9DD32211C4713EF00F2AE54 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		E9DD32221C4713EF00F2AE54 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -247,6 +353,14 @@
 			buildConfigurations = (
 				E9DD32121C46E06C00F2AE54 /* Debug */,
 				E9DD32131C46E06C00F2AE54 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		E9DD32201C4713EF00F2AE54 /* Build configuration list for PBXNativeTarget "ParseTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E9DD32211C4713EF00F2AE54 /* Debug */,
+				E9DD32221C4713EF00F2AE54 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 		};
