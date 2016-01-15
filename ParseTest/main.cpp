@@ -24,11 +24,9 @@ int main(int argc, const char * argv[]) {
 	std::string fileName = argv[1];
 	std::ifstream file(fileName);
 	LDParse::Lexer lex(file, &err);
-	std::vector<LDParse::Token> line;
 	
 	std::string rootName = fileName;
-	
-	std::map<std::string, std::vector<std::vector<LDParse::Token> > > models;
+	LDParse::ModelStream models;
 	
 	bool isMPD = lex.lexModelBoundaries(models, rootName);
 	

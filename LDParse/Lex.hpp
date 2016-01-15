@@ -14,6 +14,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <limits>
 
 #include <boost/variant.hpp>
 
@@ -32,20 +33,53 @@ namespace LDParse {
 	typedef enum : bool {
 		CCW = false,
 		CW = true
-	} OrientationT;
+	} Winding;
 	
 	
 	struct Token;
 	
 	std::ostream &operator<<(std::ostream &out, const Token &o);
 	
-	typedef boost::variant<const char *, std::string, OrientationT, float, int32_t> TokenValue;
+	typedef boost::variant<const char *, std::string, Winding, float, int32_t> TokenValue;
 	struct Token {
 		TokenKind k;
 		TokenValue v;
 		const std::string textRepr() const;
 		friend std::ostream &operator<<(std::ostream &out, const Token &o);
+		
+		
+		inline bool isNumber(Token &t){
+			switch(k){
+				case Zero...Five:
+				case HexInt:
+				case DecInt:
+				case Float:
+					return true;
+				default:
+					return false;
+			}
+		}
+		inline float getNumber(Token &t){
+			float ret;
+			switch(k){
+				case Zero...Five:
+				case DecInt:
+				case HexInt:
+					ret = boost::get<int32_t>(v);
+					break;
+				case Float:
+					ret = boost::get<float>(v);
+					break;
+				default:
+					ret = std::numeric_limits<float>::quiet_NaN();
+			}
+			return ret;
+		}
+		
 	};
+	
+	typedef std::vector<Token> TokenStream;
+	typedef std::map<std::string, std::vector<TokenStream > > ModelStream;
 	
 	class Lexer {
 	public:
@@ -63,8 +97,8 @@ namespace LDParse {
 		
 		
 		Lexer(std::istream &input, ErrFType errHandler) : mInput(input), mErrHandler(errHandler), mBOF(mInput.tellg()) {mInput >> std::noskipws;}
-		bool lexLine(std::vector<Token> &line, LexState start = Lex);
-		bool lexModelBoundaries(std::map<std::string, std::vector<std::vector<Token> > > &models, std::string &root, bool rewind = true);
+		bool lexLine(TokenStream &line, LexState start = Lex);
+		bool lexModelBoundaries(ModelStream &models, std::string &root, bool rewind = true);
 		
 	private:
 		

@@ -35,7 +35,7 @@ namespace LDParse {
 				out << boost::get<float>(v);
 				break;
 			case Orientation:
-				out << (boost::get<OrientationT>(v) ? "CW" : "CCW");
+				out << (boost::get<Winding>(v) ? "CW" : "CCW");
 				break;
 			case Ident:
 			case Garbage:
@@ -63,7 +63,7 @@ namespace LDParse {
 	};
 
 	
-	bool Lexer::lexLine(std::vector<Token> &lineV, LexState start) {
+	bool Lexer::lexLine(TokenStream &lineV, LexState start) {
 		LexState state = start;
 		bool ret = true;
 		Token cur;
@@ -214,7 +214,7 @@ namespace LDParse {
 		return ret;
 	}
 	
-	bool Lexer::lexModelBoundaries(std::map<std::string, std::vector<std::vector<Token> > > &models, std::string &root, bool rewind){
+	bool Lexer::lexModelBoundaries(ModelStream &models, std::string &root, bool rewind){
 		typedef enum : uint8_t {
 			First = 0,
 			Second = 1,
@@ -227,8 +227,8 @@ namespace LDParse {
 		} else if (rewind) {
 			mInput.clear(); mInput.seekg(mBOF);
 		}
-		std::vector<std::vector<Token> > fileContents;
-		std::vector<Token> lineContents;
+		ModelStream::mapped_type fileContents;
+		TokenStream lineContents;
 		fileContents.clear();
 		lineContents.clear();
 		std::string fileName(root);
@@ -252,13 +252,13 @@ namespace LDParse {
 								state = Second;
 								break;
 							default:
-								state = NTail;
+								state = /*N*/ITail;
 						}
 						break;
 					case Second:
 						switch(it->k){
 							case File:
-								if(inFile) storeFile();
+								if(fileCt && inFile) storeFile();
 								if(!(fileCt++) && fileContents.size()){
 									mErrHandler("LDR commands found before first model. Previous commands will be discarded", it->textRepr(), false);
 									fileContents.clear();
@@ -287,9 +287,6 @@ namespace LDParse {
 					case YTail:
 						if(fileName.length()) fileName += " ";
 						fileName += it->textRepr();
-						if(!fileName.compare("32524.dat")){
-							mErrHandler("stop here", "", false);
-						}
 						break;
 					default:
 						mErrHandler("Loop invariant failed. Something is wrong,", it->textRepr(), false);
