@@ -15,10 +15,11 @@
 
 namespace LDParse{
 	
-	template<typename MetaHandler, typename IncludeHandler, typename LineHandler, typename TriangleHandler, typename QuadHandler, typename OptHandler> class Parser
+	template<typename MPDHandler, typename MetaHandler, typename IncludeHandler, typename LineHandler, typename TriangleHandler, typename QuadHandler, typename OptHandler> class Parser
 	{
 	private:
 		Winding winding;
+		MPDHandler &mMPD;
 		MetaHandler &mMeta;
 		IncludeHandler &mIncl;
 		LineHandler &mLine;
@@ -27,9 +28,11 @@ namespace LDParse{
 		OptHandler &mOpt;
 	public:
 		
-		Parser(MetaHandler &m, IncludeHandler &i, LineHandler &l, TriangleHandler &t, QuadHandler &q, OptHandler &o) :  mMeta(m), mIncl(i), mLine(l), mTri(t), mQuad(q), mOpt(o), winding(CCW) {}
+		Parser(MPDHandler &mpd, MetaHandler &m, IncludeHandler &i, LineHandler &l, TriangleHandler &t, QuadHandler &q, OptHandler &o) :  mMeta(m), mIncl(i), mLine(l), mTri(t), mQuad(q), mOpt(o), winding(CCW) {}
 		
-		bool parseModels(ModelStream models, std::string root);
+		bool parseModels(const ModelStream &models, std::string root){
+			
+		}
 		
 		
 		inline std::string coalesceText(TokenStream::const_iterator start, TokenStream::const_iterator end){

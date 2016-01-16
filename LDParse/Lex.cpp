@@ -227,17 +227,18 @@ namespace LDParse {
 		} else if (rewind) {
 			mInput.clear(); mInput.seekg(mBOF);
 		}
-		ModelStream::mapped_type fileContents;
+		LineStream fileContents;
 		TokenStream lineContents;
+		models.clear();
 		fileContents.clear();
 		lineContents.clear();
 		std::string fileName(root);
 		bool inFile = true;
 		size_t fileCt = 0;
 		
-		auto storeFile = [&](){
-			models[fileName] = fileContents;
-			if(fileCt == 1) root = fileName;
+		auto storeFile = [&](bool cleanup = false){
+			models.push_back(std::make_pair(fileName, fileContents));
+			if(fileCt == 1 || (cleanup && fileCt == 0)) root = fileName;
 			fileName = "";
 			fileContents.clear();
 		};
@@ -302,8 +303,7 @@ namespace LDParse {
 		}
 		
 		if (inFile) {
-			models[fileName] = fileContents;
-			if(fileCt <= 1) root = fileName;
+			storeFile(true);
 		}
 		
 		return fileCt;

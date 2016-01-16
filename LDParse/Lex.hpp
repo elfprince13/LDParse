@@ -79,7 +79,8 @@ namespace LDParse {
 	};
 	
 	typedef std::vector<Token> TokenStream;
-	typedef std::map<std::string, std::vector<TokenStream > > ModelStream;
+	typedef std::vector<TokenStream> LineStream;
+	typedef std::vector<std::pair<std::string, LineStream> > ModelStream;
 	
 	class Lexer {
 	public:
