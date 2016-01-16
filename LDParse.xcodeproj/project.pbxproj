@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E99D0D691C499F3F00278852 /* Geom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E99D0D671C499F3F00278852 /* Geom.cpp */; };
 		E99D0D6A1C499F3F00278852 /* Geom.hpp in Headers */ = {isa = PBXBuildFile; fileRef = E99D0D681C499F3F00278852 /* Geom.hpp */; };
+		E99D0D6C1C4ABAE700278852 /* Parse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E99D0D6B1C4ABAE700278852 /* Parse.cpp */; };
 		E9DD320A1C46E06C00F2AE54 /* Parse.hpp in Headers */ = {isa = PBXBuildFile; fileRef = E9DD32091C46E06C00F2AE54 /* Parse.hpp */; };
 		E9DD32161C46E0A600F2AE54 /* Lex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E9DD32141C46E0A600F2AE54 /* Lex.cpp */; };
 		E9DD32171C46E0A600F2AE54 /* Lex.hpp in Headers */ = {isa = PBXBuildFile; fileRef = E9DD32151C46E0A600F2AE54 /* Lex.hpp */; };
@@ -41,8 +41,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		E99D0D671C499F3F00278852 /* Geom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Geom.cpp; sourceTree = "<group>"; };
 		E99D0D681C499F3F00278852 /* Geom.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Geom.hpp; sourceTree = "<group>"; };
+		E99D0D6B1C4ABAE700278852 /* Parse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Parse.cpp; sourceTree = "<group>"; };
 		E9DD32061C46E06C00F2AE54 /* libLDParse.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libLDParse.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		E9DD32091C46E06C00F2AE54 /* Parse.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Parse.hpp; sourceTree = "<group>"; };
 		E9DD32141C46E0A600F2AE54 /* Lex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Lex.cpp; sourceTree = "<group>"; };
@@ -95,10 +95,10 @@
 			children = (
 				E9DD32361C48595F00F2AE54 /* AST.cpp */,
 				E9DD32371C48595F00F2AE54 /* AST.hpp */,
+				E99D0D6B1C4ABAE700278852 /* Parse.cpp */,
 				E9DD32091C46E06C00F2AE54 /* Parse.hpp */,
 				E9DD32141C46E0A600F2AE54 /* Lex.cpp */,
 				E9DD32151C46E0A600F2AE54 /* Lex.hpp */,
-				E99D0D671C499F3F00278852 /* Geom.cpp */,
 				E99D0D681C499F3F00278852 /* Geom.hpp */,
 			);
 			path = LDParse;
@@ -204,8 +204,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E99D0D6C1C4ABAE700278852 /* Parse.cpp in Sources */,
 				E9DD32381C48595F00F2AE54 /* AST.cpp in Sources */,
-				E99D0D691C499F3F00278852 /* Geom.cpp in Sources */,
 				E9DD32161C46E0A600F2AE54 /* Lex.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

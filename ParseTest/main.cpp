@@ -10,7 +10,6 @@
 #include <fstream>
 #include "Lex.hpp"
 
-
 void err(std::string msg, std::string tok, bool fatal) {
 	std::cerr << (fatal ? "Error: " : "Warning: ") << msg << "(" << tok << ")" << std::endl;
 	if(fatal) exit(-1);
@@ -23,7 +22,7 @@ int main(int argc, const char * argv[]) {
 	}
 	std::string fileName = argv[1];
 	std::ifstream file(fileName);
-	LDParse::Lexer lex(file, &err);
+	LDParse::CallbackLexer lex(file, &err);
 	
 	std::string rootName = fileName;
 	LDParse::ModelStream models;
@@ -44,7 +43,6 @@ int main(int argc, const char * argv[]) {
 		}
 		std::cout << std::endl << std::endl;
 	}
-	
 	
     return 0;
 }
