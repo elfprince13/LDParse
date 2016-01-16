@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E99D0D691C499F3F00278852 /* Geom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E99D0D671C499F3F00278852 /* Geom.cpp */; };
+		E99D0D6A1C499F3F00278852 /* Geom.hpp in Headers */ = {isa = PBXBuildFile; fileRef = E99D0D681C499F3F00278852 /* Geom.hpp */; };
 		E9DD320A1C46E06C00F2AE54 /* Parse.hpp in Headers */ = {isa = PBXBuildFile; fileRef = E9DD32091C46E06C00F2AE54 /* Parse.hpp */; };
 		E9DD320E1C46E06C00F2AE54 /* Parse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E9DD320D1C46E06C00F2AE54 /* Parse.cpp */; };
 		E9DD32161C46E0A600F2AE54 /* Lex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E9DD32141C46E0A600F2AE54 /* Lex.cpp */; };
@@ -40,6 +42,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E99D0D671C499F3F00278852 /* Geom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Geom.cpp; sourceTree = "<group>"; };
+		E99D0D681C499F3F00278852 /* Geom.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Geom.hpp; sourceTree = "<group>"; };
 		E9DD32061C46E06C00F2AE54 /* libLDParse.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libLDParse.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		E9DD32091C46E06C00F2AE54 /* Parse.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Parse.hpp; sourceTree = "<group>"; };
 		E9DD320D1C46E06C00F2AE54 /* Parse.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Parse.cpp; sourceTree = "<group>"; };
@@ -97,6 +101,8 @@
 				E9DD32091C46E06C00F2AE54 /* Parse.hpp */,
 				E9DD32141C46E0A600F2AE54 /* Lex.cpp */,
 				E9DD32151C46E0A600F2AE54 /* Lex.hpp */,
+				E99D0D671C499F3F00278852 /* Geom.cpp */,
+				E99D0D681C499F3F00278852 /* Geom.hpp */,
 			);
 			path = LDParse;
 			sourceTree = "<group>";
@@ -118,6 +124,7 @@
 			files = (
 				E9DD32391C48595F00F2AE54 /* AST.hpp in Headers */,
 				E9DD32171C46E0A600F2AE54 /* Lex.hpp in Headers */,
+				E99D0D6A1C499F3F00278852 /* Geom.hpp in Headers */,
 				E9DD320A1C46E06C00F2AE54 /* Parse.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -201,6 +208,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E9DD32381C48595F00F2AE54 /* AST.cpp in Sources */,
+				E99D0D691C499F3F00278852 /* Geom.cpp in Sources */,
 				E9DD320E1C46E06C00F2AE54 /* Parse.cpp in Sources */,
 				E9DD32161C46E0A600F2AE54 /* Lex.cpp in Sources */,
 			);
@@ -365,6 +373,7 @@
 				E9DD32131C46E06C00F2AE54 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		E9DD32201C4713EF00F2AE54 /* Build configuration list for PBXNativeTarget "ParseTest" */ = {
 			isa = XCConfigurationList;
@@ -373,6 +382,7 @@
 				E9DD32221C4713EF00F2AE54 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

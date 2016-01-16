@@ -11,15 +11,9 @@
 #define Parse_hpp
 
 #include "Lex.hpp"
+#include "Geom.hpp"
 
 namespace LDParse{
-	
-	typedef std::tuple<float, float, float> Position;
-	typedef std::tuple<	Position,
-						float, float, float, float,
-						float, float, float, float,
-						float, float, float, float> TransMatrix;
-	
 	
 	class Parser
 	{
