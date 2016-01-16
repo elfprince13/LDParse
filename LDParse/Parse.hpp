@@ -15,13 +15,19 @@
 
 namespace LDParse{
 	
-	class Parser
+	template<typename MetaHandler, typename IncludeHandler, typename LineHandler, typename TriangleHandler, typename QuadHandler, typename OptHandler> class Parser
 	{
 	private:
 		Winding winding;
+		MetaHandler &mMeta;
+		IncludeHandler &mIncl;
+		LineHandler &mLine;
+		TriangleHandler &mTri;
+		QuadHandler &mQuad;
+		OptHandler &mOpt;
 	public:
 		
-		Parser() : winding(CCW) {}
+		Parser(MetaHandler &m, IncludeHandler &i, LineHandler &l, TriangleHandler &t, QuadHandler &q, OptHandler &o) :  mMeta(m), mIncl(i), mLine(l), mTri(t), mQuad(q), mOpt(o), winding(CCW) {}
 		
 		bool parseModels(ModelStream models, std::string root);
 		

@@ -17,9 +17,13 @@
 
 namespace LDParse{
 	
+	typedef std::tuple<bool, uint32_t> ColorRef;
 	typedef std::tuple<float, float, float> Position;
-	//typedef std::tuple<Position, Position, Position> Triangle;
-	typedef std::tuple<	Position,
+	typedef std::tuple<Position, Position, Position> Line;
+	typedef std::tuple<Position, Position, Position> Triangle;
+	typedef std::tuple<Position, Position, Position> Quad;
+	typedef std::tuple<Line, Line> OptLine;
+	typedef std::tuple<Position,
 	float, float, float,
 	float, float, float,
 	float, float, float> TransMatrix;
