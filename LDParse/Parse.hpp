@@ -30,7 +30,7 @@ namespace LDParse{
 	
 	
 	typedef void(*FailF)(const TokenStream::const_iterator &, bool *);
-	template<typename Out> using ReadF = bool (*)(TokenStream::const_iterator &tokenIt, Out &o, FailF fail);
+	template<typename Out> using ReadF = bool (*)(const TokenStream &tokens, TokenStream::const_iterator &tokenIt, Out &o, FailF fail);
 	
 	template<typename ReadF, typename Out, size_t tokenLen, const char * tokenName, typename ErrHandler> class Expect{
 	private:
@@ -60,7 +60,7 @@ namespace LDParse{
 		bool operator()(const TokenStream &tokens, TokenStream::const_iterator &tokenIt, Out &o){
 			bool ret = std::distance(tokenIt, tokens.end()) >= 1;
 			if(ret) {
-				ret = mRead(tokenIt, o, this);
+				ret = mRead(tokens, tokenIt, o, this);
 			} else {
 				failed(tokenName, "EOL");
 			}
@@ -81,6 +81,11 @@ namespace LDParse{
 	private:
 		constexpr static const char strEOL[] = "EOL";
 		constexpr static const char strNUM[] = "number";
+		constexpr static const char strPOS[] = "position";
+		constexpr static const char strLINE[] = "line";
+		constexpr static const char strTRI[] = "triangle";
+		constexpr static const char strQUAD[] = "quadrilateral";
+		constexpr static const char strOPT[] = "optional line";
 		constexpr static const char strCOL[] = "color reference";
 		
 		
@@ -94,7 +99,7 @@ namespace LDParse{
 		OptHandler &mOpt;
 		ErrHandler &mErr;
 		
-		bool readColor(TokenStream::const_iterator &tokenIt, ColorRef &color, FailF fail) const{
+		bool readColor(const TokenStream &tokens, TokenStream::const_iterator &tokenIt, ColorRef &color, FailF fail) const{
 			bool ret = true;
 			switch(tokenIt->k){
 				case HexInt:
@@ -109,7 +114,7 @@ namespace LDParse{
 			return ret;
 		}
 		
-		bool readNumber(TokenStream::const_iterator &tokenIt, float &num, FailF fail) const{
+		bool readNumber(const TokenStream &tokens, TokenStream::const_iterator &tokenIt, float &num, FailF fail) const{
 			bool ret = true;
 			switch(tokenIt->k){
 				case HexInt:
@@ -122,6 +127,25 @@ namespace LDParse{
 				default:
 					fail(tokenIt, &ret);
 			}
+			return ret;
+		}
+		
+		bool readPosition(const TokenStream &tokens, TokenStream::const_iterator &tokenIt, Position &p, FailF fail) const{
+			const TokenStream::const_iterator start = tokenIt;
+			bool ret = true;
+			ret = expectNumber(tokens, tokenIt, std::get<0>(p))
+				&&expectNumber(tokens, tokenIt, std::get<1>(p))
+				&&expectNumber(tokens, tokenIt, std::get<2>(p));
+			if(!ret) fail(start, &ret);
+ 			return ret;
+		}
+		
+		bool readLine(const TokenStream &tokens, TokenStream::const_iterator &tokenIt, Line &l, FailF fail) const{
+			const TokenStream::const_iterator start = tokenIt;
+			bool ret = true;
+			ret = expectPosition(tokens, tokenIt, std::get<0>(l))
+				&&expectPosition(tokens, tokenIt, std::get<1>(l));
+			if(!ret) fail(start, &ret);
 			return ret;
 		}
 		
@@ -138,17 +162,31 @@ namespace LDParse{
 		typedef Expect<ReadF<float>, float, 1, strNUM, ErrHandler> ExpectNumber;
 		const ExpectNumber expectNumber;
 		
+		typedef Expect<ReadF<Position>, Position, 1, strPOS, ErrHandler> ExpectPosition;
+		const ExpectPosition expectPosition;
+		
+		typedef Expect<ReadF<Line>, Line, 1, strLINE, ErrHandler> ExpectLine;
+		const ExpectLine expectLine;
+		
 		Parser(MPDHandler &mpd, MetaHandler &m, IncludeHandler &i, LineHandler &l, TriangleHandler &t, QuadHandler &q, OptHandler &o, ErrHandler &e)
 		:  mMeta(m), mIncl(i), mLine(l), mTri(t), mQuad(q), mOpt(o), winding(CCW), expectEOL(mErr) {
 			const SelfType *self = this;
 			expectColor = ExpectColor(mErr,
-									  [](TokenStream::const_iterator &tokenIt, ColorRef &color, FailF fail){
-										  self->readColor(tokenIt, color, fail);
+									  [](const TokenStream &tokens, TokenStream::const_iterator &tokenIt, ColorRef &color, FailF fail){
+										  self->readColor(tokens, tokenIt, color, fail);
 									  });
 			expectNumber = ExpectNumber(mErr,
-									  [](TokenStream::const_iterator &tokenIt, float &num, FailF fail){
-										  self->readNumber(tokenIt, num, fail);
+									  [](const TokenStream &tokens, TokenStream::const_iterator &tokenIt, float &num, FailF fail){
+										  self->readNumber(tokens, tokenIt, num, fail);
 									  });
+			expectPosition = ExpectPosition(mErr,
+										[](const TokenStream &tokens, TokenStream::const_iterator &tokenIt, Position &p, FailF fail){
+											self->readNumber(tokens, tokenIt, p, fail);
+										});
+			expectLine = ExpectLine(mErr,
+										[](const TokenStream &tokens, TokenStream::const_iterator &tokenIt, Line &l, FailF fail){
+											self->readNumber(tokens, tokenIt, l, fail);
+										});
 		}
 		
 		void parseModels(const ModelStream &models){
