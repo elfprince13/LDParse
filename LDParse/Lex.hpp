@@ -272,8 +272,6 @@ namespace LDParse {
 												cur.k = HexInt;
 												cur.v = i;
 												break;
-											} else {
-												goto LEXED_GARBAGE;
 											}
 										}
 									case '1'...'9':
@@ -292,17 +290,34 @@ namespace LDParse {
 											}
 											break;
 										} else {
-											goto LEXED_GARBAGE;
+											switch(tokText[0]){
+												case '0'...'9':
+													break;
+												case '+':
+												case '-':
+												case '.':
+													goto LEXED_GARBAGE;
+												default:
+													mErrHandler("Lexer has experienced disallowed fall-through", tokText, true);
+											}
 										}
 									}
 									case 'a'...'z':
-									case 'A'...'Z':
-										if(find_if(tokText.begin(), tokText.end(),
-												   [](char c) { return !isalnum(c) || (AllowedSpecialChars.find(c) == std::string::npos); }) == tokText.end()) {
+									case 'A'...'Z': {
+										const std::string::const_iterator garbage_pos = find_if_not(tokText.begin(), tokText.end(),
+																	 [](char c) { return isalnum(c) || (AllowedSpecialChars.find(c) != std::string::npos); });
+										if(garbage_pos == tokText.end()) {
 											cur.k = Ident;
 											cur.v = tokText;
 											break;
+										} /* 
+										else {
+											std::string errChar("x");
+											errChar[0] = *garbage_pos;
+											mErrHandler("Started lexing ident, found apparent garbage instead", errChar, false);
 										}
+										//*/
+									}
 									default:
 									LEXED_GARBAGE:
 										cur.k = Garbage;
@@ -327,7 +342,9 @@ namespace LDParse {
 										mErrHandler("Found keyword entry in Lexer::keywordMap, but unknown keyword", tokText, true);
 								}
 							}
-							if(push) lineV.push_back(cur);
+							if(push){
+								lineV.push_back(cur);
+							}
 						}
 				}
 			}
