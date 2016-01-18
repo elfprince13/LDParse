@@ -133,7 +133,11 @@ namespace LDParse{
 										case File:{
 											std::string name;
 											ret &= expectIdent(token, eol, name);
-											if(ret) nextAction = mMPD(name);
+											if(ret){
+												coalesceText(token, eol, name);
+												ret &= expectEOL(token, eol);
+												if(ret) nextAction = mMPD(name);
+											}
 											break;
 										}
 										case NoFile:
@@ -226,10 +230,14 @@ namespace LDParse{
 			return ret;
 		}
 		
-		static inline std::string coalesceText(TokenStream::const_iterator start, TokenStream::const_iterator end){
-			std::string ret("");
-			for(auto it = start; it != end; ++it) ret += it->textRepr();
-			return ret;
+		/*
+		 * Does not clear context of `text` prior to coalescing. This is the caller's responsibility.
+		 */
+		static inline void coalesceText(TokenStream::const_iterator &start, const TokenStream::const_iterator &end, std::string &text){
+			while(start != end){
+				if(text.length()) text += " ";
+				text += (start++)->textRepr();
+			}
 		}
 		
 	};
