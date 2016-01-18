@@ -12,7 +12,7 @@
 #include "Parse.hpp"
 
 void err(std::string msg, std::string tok, bool fatal) {
-	std::cerr << (fatal ? "Error: " : "Warning: ") << msg << "(" << tok << ")" << std::endl;
+	std::cerr << (fatal ? "Error: " : "Warning: ") << msg << " ( " << tok << " )" << std::endl;
 	if(fatal) exit(-1);
 }
 
