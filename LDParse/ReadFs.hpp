@@ -20,6 +20,7 @@ namespace LDParse {
 			case HexInt:
 				color = {false, boost::get<int32_t>((tokenIt++)->v)};
 				break;
+			case Zero...Five:
 			case DecInt:
 				color = {true, boost::get<int32_t>((tokenIt++)->v)};
 				break;
@@ -34,6 +35,7 @@ namespace LDParse {
 		switch(tokenIt->k){
 			case HexInt:
 			case DecInt:
+			case Zero...Five:
 				num = boost::get<int32_t>((tokenIt++)->v);
 				break;
 			case Float:
