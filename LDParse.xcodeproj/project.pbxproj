@@ -43,6 +43,8 @@
 /* Begin PBXFileReference section */
 		E99D0D681C499F3F00278852 /* Geom.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Geom.hpp; sourceTree = "<group>"; };
 		E99D0D6B1C4ABAE700278852 /* Parse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Parse.cpp; sourceTree = "<group>"; };
+		E99D0D6D1C4C71B100278852 /* ReadFs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadFs.hpp; sourceTree = "<group>"; };
+		E99D0D6E1C4C723100278852 /* Expect.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Expect.hpp; sourceTree = "<group>"; };
 		E9DD32061C46E06C00F2AE54 /* libLDParse.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libLDParse.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		E9DD32091C46E06C00F2AE54 /* Parse.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Parse.hpp; sourceTree = "<group>"; };
 		E9DD32141C46E0A600F2AE54 /* Lex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Lex.cpp; sourceTree = "<group>"; };
@@ -97,6 +99,8 @@
 				E9DD32371C48595F00F2AE54 /* AST.hpp */,
 				E99D0D6B1C4ABAE700278852 /* Parse.cpp */,
 				E9DD32091C46E06C00F2AE54 /* Parse.hpp */,
+				E99D0D6E1C4C723100278852 /* Expect.hpp */,
+				E99D0D6D1C4C71B100278852 /* ReadFs.hpp */,
 				E9DD32141C46E0A600F2AE54 /* Lex.cpp */,
 				E9DD32151C46E0A600F2AE54 /* Lex.hpp */,
 				E99D0D681C499F3F00278852 /* Geom.hpp */,

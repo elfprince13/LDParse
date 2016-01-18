@@ -9,11 +9,36 @@
 #include <iostream>
 #include <fstream>
 #include "Lex.hpp"
+#include "Parse.hpp"
 
 void err(std::string msg, std::string tok, bool fatal) {
 	std::cerr << (fatal ? "Error: " : "Warning: ") << msg << "(" << tok << ")" << std::endl;
 	if(fatal) exit(-1);
 }
+
+
+static LDParse::ErrF errF = &err;
+
+/*
+typedef Action (*MPDF)(boost::optional<const std::string&>);
+typedef Action (*MetaF)(TokenStream::const_iterator &tokenIt, const TokenStream::const_iterator &eolIt);
+typedef Action (*InclF)(const ColorRef &c, const TransMatrix &t, const std::string &name);
+typedef Action (*LineF)(const ColorRef &c, const Line &l);
+typedef Action (*TriF)(const ColorRef &c, const Triangle &t);
+typedef Action (*QuadF)(const ColorRef &c, const Quad &q);
+typedef Action (*OptF)(const ColorRef &c, const OptLine &o);
+*/
+
+static LDParse::MPDF mpdHandler = [](boost::optional<const std::string &> file) {
+	std::cout << "0 ";
+	if(file) {
+		std::cout << "FILE " << *file;
+	} else {
+		std::cout << "NOFILE";
+	}
+	std::cout << std::endl;
+	return LDParse::Action();
+};
 
 int main(int argc, const char * argv[]) {
 	if(argc < 2){
@@ -43,6 +68,19 @@ int main(int argc, const char * argv[]) {
 		}
 		std::cout << std::endl << std::endl;
 	}
+	
+	LDParse::CallbackParser par(mpdHandler,
+								LDParse::DummyImpl::dummyMeta,
+								LDParse::DummyImpl::dummyIncl,
+								LDParse::DummyImpl::dummyLine,
+								LDParse::DummyImpl::dummyTri,
+								LDParse::DummyImpl::dummyQuad,
+								LDParse::DummyImpl::dummyOpt,
+								errF);
+	
+	par.parseModels(models);
+	
+	
 	
     return 0;
 }
