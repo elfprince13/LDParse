@@ -25,6 +25,30 @@ namespace LDParse {
 			std::string mPrefix;
 			std::vector<std::unique_ptr<CacheNode>> mSuffixes; // Semantically, this is a set, but we don't use any of the nice set operations, so...
 			
+			inline static const std::string findCommonPrefix(const std::string& str1, const std::string& str2){
+				static std::locale fcpLocale;
+				char c1, c2;
+				std::string prefix = std::string("");
+				prefix.clear();
+				size_t iMax = std::min(str1.size(), str2.size());
+				for(size_t i = 0; i < iMax; i++){
+					c1 = toupper(str1[i],fcpLocale);
+					c2 = toupper(str2[i],fcpLocale);
+					if(c1==c2) prefix.append(std::string(1,c1));
+					else break;
+				}
+				return prefix;
+			}
+			
+			inline const static std::string up(const std::string& str1) {
+				static std::locale fcpLocale;
+				std::string upper = str1;
+				size_t iMax = str1.size();
+				for(size_t i = 0; i < iMax; i++){
+					upper[i] = std::toupper(str1[i],fcpLocale);
+				}
+				return upper;
+			}
 		public:
 			boost::optional<Contents&> find(std::string nodeName, int depth=-1) const {
 				std::string ds("");
@@ -145,50 +169,14 @@ namespace LDParse {
 				}
 			}
 			
-			void setContents(std::unique_ptr<Contents> newContents){
-				mContents = std::move(newContents);
-			}
-			
+			void setContents(std::unique_ptr<Contents> newContents){ mContents = std::move(newContents); }
 			boost::optional<Contents&> getContents() const {return mContents ? boost::optional<Contents&>(*mContents) : boost::none;};
 			
-			static std::string findCommonPrefix(std::string str1, std::string str2){
-				static std::locale fcpLocale;
-				static char c1, c2;
-				std::string prefix = std::string("");
-				prefix.clear();
-				size_t iMax = std::min(str1.size(), str2.size());
-				for(size_t i = 0; i < iMax; i++){
-					c1 = toupper(str1[i],fcpLocale);
-					c2 = toupper(str2[i],fcpLocale);
-					if(c1==c2) prefix.append(std::string(1,c1));
-					else break;
-				}
-				return prefix;
-			}
-			
-			static CacheNode* makeRoot(){ return (new CacheNode); }
-			
+			static CacheNode* makeRoot(){ return new CacheNode; }
 			
 			CacheNode(std::string prefix = "", std::unique_ptr<Contents> contents = nullptr) : mPrefix(prefix) {
 				setContents(std::move(contents));
 				mSuffixes.clear();
-			}
-			
-			const bool operator<(const CacheNode &other) const {	return up(mPrefix) < up(other.mPrefix);	}
-			const bool operator>(const CacheNode &other) const {	return up(mPrefix) > up(other.mPrefix);	}
-			const bool operator<=(const CacheNode &other) const {	return up(mPrefix) <= up(other.mPrefix);	}
-			const bool operator>=(const CacheNode &other) const {	return up(mPrefix) >= up(other.mPrefix);	}
-			const bool operator==(const CacheNode &other) const {	return up(mPrefix) == up(other.mPrefix);	}
-			const bool operator!=(const CacheNode &other) const {	return up(mPrefix) != up(other.mPrefix);	}
-			
-			inline const static std::string up(std::string str1) {
-				static std::locale fcpLocale;
-				std::string upper = str1;
-				size_t iMax = str1.size();
-				for(size_t i = 0; i < iMax; i++){
-					upper[i] = std::toupper(str1[i],fcpLocale);
-				}
-				return upper;
 			}
 		};
 

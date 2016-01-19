@@ -49,7 +49,9 @@ int main(int argc, const char * argv[]) {
 	std::string fileName = argv[1];
 	std::ifstream file(fileName);
 	
-	LDParse::Model * model = LDParse::Model::construct(fileName, fileName, file, errF);
+	LDParse::ColorTable colors;
+	
+	LDParse::Model * model = LDParse::Model::construct(fileName, fileName, file, colors, errF);
 	
 	/*
 	

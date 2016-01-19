@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E978EB611C4EF1EF00509462 /* Color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E978EB5F1C4EF1EF00509462 /* Color.cpp */; };
+		E978EB621C4EF1EF00509462 /* Color.hpp in Headers */ = {isa = PBXBuildFile; fileRef = E978EB601C4EF1EF00509462 /* Color.hpp */; };
 		E99D0D6A1C499F3F00278852 /* Geom.hpp in Headers */ = {isa = PBXBuildFile; fileRef = E99D0D681C499F3F00278852 /* Geom.hpp */; };
 		E99D0D6C1C4ABAE700278852 /* Parse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E99D0D6B1C4ABAE700278852 /* Parse.cpp */; };
 		E99D0D701C4D582C00278852 /* Model.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E99D0D6F1C4D582C00278852 /* Model.cpp */; };
@@ -40,6 +42,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E978EB5F1C4EF1EF00509462 /* Color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Color.cpp; sourceTree = "<group>"; };
+		E978EB601C4EF1EF00509462 /* Color.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Color.hpp; sourceTree = "<group>"; };
 		E99D0D681C499F3F00278852 /* Geom.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Geom.hpp; sourceTree = "<group>"; };
 		E99D0D6B1C4ABAE700278852 /* Parse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Parse.cpp; sourceTree = "<group>"; };
 		E99D0D6D1C4C71B100278852 /* ReadFs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadFs.hpp; sourceTree = "<group>"; };
@@ -96,6 +100,8 @@
 			isa = PBXGroup;
 			children = (
 				E99D0D821C4D68DF00278852 /* Cache.hpp */,
+				E978EB5F1C4EF1EF00509462 /* Color.cpp */,
+				E978EB601C4EF1EF00509462 /* Color.hpp */,
 				E99D0D6E1C4C723100278852 /* Expect.hpp */,
 				E99D0D6D1C4C71B100278852 /* ReadFs.hpp */,
 				E99D0D681C499F3F00278852 /* Geom.hpp */,
@@ -126,6 +132,7 @@
 			files = (
 				E9DD32171C46E0A600F2AE54 /* Lex.hpp in Headers */,
 				E99D0D6A1C499F3F00278852 /* Geom.hpp in Headers */,
+				E978EB621C4EF1EF00509462 /* Color.hpp in Headers */,
 				E9DD320A1C46E06C00F2AE54 /* Parse.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -209,6 +216,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E99D0D6C1C4ABAE700278852 /* Parse.cpp in Sources */,
+				E978EB611C4EF1EF00509462 /* Color.cpp in Sources */,
 				E99D0D701C4D582C00278852 /* Model.cpp in Sources */,
 				E9DD32161C46E0A600F2AE54 /* Lex.cpp in Sources */,
 			);

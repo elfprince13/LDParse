@@ -10,11 +10,13 @@
 #define Model_h
 
 #include "Cache.hpp"
+#include "Color.hpp"
 #include "Geom.hpp"
 #include "Lex.hpp"
 #include "Parse.hpp"
 
 #include <iostream>
+#include <unordered_set>
 
 namespace LDParse{
 
@@ -36,24 +38,21 @@ namespace LDParse{
 		Invert = 1
 	} BFCStatus;
 	
-	class ColorTable {
-		
-	};
-	
 	class Model {
-		friend class ModelBuilder;
 	public:
 		typedef Cache::CacheNode<const Model> CacheType;
 	private:
 		std::string mName;
 		std::string mSrcLoc;
 		SrcType mSrcType;
+		boost::optional<std::unordered_set<std::string> > mSubModelNames;
 		std::unique_ptr<CacheType> mSubModels;
+		ColorTable &mColorTable;
 
-		LDMesh data;
-		size_t color;
-		std::vector<std::tuple<size_t, BFCStatus, TransMatrix, const Model*> > children;
-		std::unordered_map<const Model*, std::pair<std::pair<size_t, size_t>, std::pair<size_t, size_t>> > childOffsets;
+		LDMesh mData;
+		size_t mColor;
+		std::vector<std::tuple<size_t, BFCStatus, TransMatrix, const Model*> > mChildren;
+		std::unordered_map<const Model*, std::pair<std::pair<size_t, size_t>, std::pair<size_t, size_t>> > mChildOffsets;
 
 		
 		template<typename ...ArgTs> struct CallbackMethod{
@@ -72,65 +71,29 @@ namespace LDParse{
 				std::swap(mSelf, self);
 				return self; // Return the old value
 			}
-			
-			
 		};
 		
-		/*
-		 typedef Action (*MPDF)(boost::optional<const std::string&> file);
-		 typedef Action (*MetaF)(TokenStream::const_iterator &tokenIt, const TokenStream::const_iterator &eolIt);
-		 typedef Action (*InclF)(const ColorRef &c, const TransMatrix &t, const std::string &name);
-		 typedef Action (*LineF)(const ColorRef &c, const Line &l);
-		 typedef Action (*TriF)(const ColorRef &c, const Triangle &t);
-		 typedef Action (*QuadF)(const ColorRef &c, const Quad &q);
-		 typedef Action (*OptF)(const ColorRef &c, const OptLine &o);
-		 */
-		Action handleMPDCommand(boost::optional<const std::string&> file){
-			std::cout << "0 ";
-			if(file) {
-				std::cout << "FILE " << *file;
-			} else {
-				std::cout << "NOFILE";
-			}
-			std::cout << std::endl;
-			
-			if(file && file->compare(mName)){
-				Model * subModel = new Model(*file, mSrcLoc, MPDSubT);
-				mSubModels->insert(*file, std::unique_ptr<Model>(subModel));
-				recordTo(subModel);
-			} else if(!file) {
-				recordTo(nullptr);
-			}
-			return Action();
-		}
+		Action handleMPDCommand(boost::optional<const std::string&> file);
 		CallbackMethod<boost::optional<const std::string&> > mpdCallback;
 		
-		Action handleInclude(const ColorRef &c, const TransMatrix &t, const std::string &name){
-			return Action();
-		}
+		Action handleInclude(const ColorRef &c, const TransMatrix &t, const std::string &name);
 		CallbackMethod<const ColorRef &, const TransMatrix &, const std::string &> inclCallback;
 		
-		Action handleTriangle(const ColorRef &c, const Triangle &t){
-			return Action();
-		}
+		Action handleTriangle(const ColorRef &c, const Triangle &t);
 		CallbackMethod<const ColorRef &, const Triangle &> triCallback;
 		
+		Action handleQuad(const ColorRef &c, const Quad &q);
+		CallbackMethod<const ColorRef &, const Quad &> quadCallback;
 		
 		
-		void recordTo(Model * subModel){
-			inclCallback.retarget(subModel);
-			triCallback.retarget(subModel);
-		}
+		
+		void recordTo(Model * subModel);
 		
 	public:
-		Model(std::string name, std::string srcLoc, SrcType srcType)
-		: mName(name), mSrcLoc(srcLoc), mSrcType(srcType), mSubModels(mSrcType == MPDRootT ? CacheType::makeRoot() : nullptr),
-		mpdCallback(this, &Model::handleMPDCommand),
-		inclCallback(this, &Model::handleInclude),
-		triCallback(this, &Model::handleTriangle){}
+		Model(std::string name, std::string srcLoc, SrcType srcType, ColorTable& colorTable, boost::optional<std::unordered_set<std::string> > subModelNames = boost::none);
 		
 		
-		template<typename ErrF> static Model* construct(std::string srcLoc, std::string modelName, std::istream &fileContents, ErrF errF, SrcType srcType = UnknownT){
+		template<typename ErrF> static Model* construct(std::string srcLoc, std::string modelName, std::istream &fileContents, ColorTable& colorTable, ErrF errF, SrcType srcType = UnknownT){
 			Model* ret = nullptr;
 			
 			Lexer<ErrF> lexer(fileContents, errF);
@@ -149,15 +112,15 @@ namespace LDParse{
 				}
 			}
 			
-			ret = new Model(modelName, srcLoc, srcType);
+			ret = new Model(modelName, srcLoc, srcType, colorTable);
 			
-			typedef Parser<decltype(mpdCallback), MetaF, InclF, LineF, TriF, QuadF, OptF, ErrF > ModelParser;
+			typedef Parser<decltype(mpdCallback), MetaF, decltype(inclCallback), LineF, decltype(triCallback), decltype(quadCallback), OptF, ErrF > ModelParser;
 			ModelParser parser(ret->mpdCallback,
 							   LDParse::DummyImpl::dummyMeta,
-							   LDParse::DummyImpl::dummyIncl,
+							   ret->inclCallback,
 							   LDParse::DummyImpl::dummyLine,
-							   LDParse::DummyImpl::dummyTri,
-							   LDParse::DummyImpl::dummyQuad,
+							   ret->triCallback,
+							   ret->quadCallback,
 							   LDParse::DummyImpl::dummyOpt,
 							   errF);
 			
