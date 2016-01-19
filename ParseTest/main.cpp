@@ -10,6 +10,7 @@
 #include <fstream>
 #include "Lex.hpp"
 #include "Parse.hpp"
+#include "Model.hpp"
 
 void err(std::string msg, std::string tok, bool fatal) {
 	std::cerr << (fatal ? "Error: " : "Warning: ") << msg << " ( " << tok << " )" << std::endl;
@@ -47,13 +48,10 @@ int main(int argc, const char * argv[]) {
 	}
 	std::string fileName = argv[1];
 	std::ifstream file(fileName);
-	LDParse::CallbackLexer lex(file, &err);
 	
-	std::string rootName = fileName;
-	LDParse::ModelStream models;
+	LDParse::Model * model = LDParse::Model::construct(fileName, fileName, file, errF);
 	
-	bool isMPD = lex.lexModelBoundaries(models, rootName);
-	
+	/*
 	
 	std::cout << "Model " << fileName << " is " << (isMPD ? "" : "not ") << " an MPD" << std::endl;
 	if(isMPD) std::cout << "\t" << "root model is " << rootName << std::endl << std::endl;
@@ -68,17 +66,8 @@ int main(int argc, const char * argv[]) {
 		}
 		std::cout << std::endl << std::endl;
 	}
-	
-	LDParse::CallbackParser par(mpdHandler,
-								LDParse::DummyImpl::dummyMeta,
-								LDParse::DummyImpl::dummyIncl,
-								LDParse::DummyImpl::dummyLine,
-								LDParse::DummyImpl::dummyTri,
-								LDParse::DummyImpl::dummyQuad,
-								LDParse::DummyImpl::dummyOpt,
-								errF);
-	
-	par.parseModels(models);
+	 
+	 */
 	
 	
 	

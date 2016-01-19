@@ -14,51 +14,29 @@
 #include <set>
 #include <locale>
 #include <iostream>
+#include <cassert>
 #include <boost/optional.hpp>
 
 namespace LDParse {
 	namespace Cache {
 		template<typename Contents> class CacheNode {
 		private:
-			/*
-			struct STLDereferencer
-			{
-				
-				template <typename PtrType>
-				bool operator()(PtrType pT1, PtrType pT2) const
-				{
-					return *pT1 < *pT2;
-				}
-			};
-			 */
-			
-			struct STLDeleter
-			{
-				template <typename T>
-				void operator()(const T* ptr) const
-				{
-					delete ptr;
-				}
-			};
-			
-			boost::optional<Contents> mContents;
-			
+			std::unique_ptr<Contents> mContents;
 			std::string mPrefix;
-			std::set<std::unique_ptr<CacheNode>/*, STLDereferencer*/> mSuffixes;
+			std::set<std::unique_ptr<CacheNode>> mSuffixes;
 			
 		public:
-			
-			boost::optional<CacheNode&> find(std::string nodeName, int depth=-1) const {
+			boost::optional<Contents&> find(std::string nodeName, int depth=-1) const {
 				std::string ds("");
 				if(depth >= 0){
 					depth++;
 					ds = std::string(depth,' ');
 				}
 				std::string commonPrefix = findCommonPrefix(mPrefix,nodeName);
-				int cpS = commonPrefix.size();
-				int nnS = nodeName.size();
-				int mpS = mPrefix.size();
-				boost::optional<CacheNode&> retNode = boost::none;
+				size_t cpS = commonPrefix.size();
+				size_t nnS = nodeName.size();
+				size_t mpS = mPrefix.size();
+				boost::optional<Contents&> retVal = boost::none;
 				if(depth >= 0){
 					std::cout << ds << "Looking for " << nodeName << ", mPrefix is \"" << mPrefix << "\"" << std::endl;
 					std::cout << ds << "- Node has children - " << std::endl;
@@ -69,29 +47,25 @@ namespace LDParse {
 				}
 				if(nnS == mpS && mpS == cpS){ // Same
 					if(depth >= 0) std::cout << ds << " - Found it" << std::endl;
-					retNode = this;
+					if(mContents) retVal = *mContents;
 				} else if((cpS == nnS) || mSuffixes.size() == 0){ // Not in the tree.
 					if(depth >= 0) std::cout << ds << " - the search is the full common prefix, but we don't match this" << std::endl;
-					retNode = boost::none;
 				} else {
 					std::string suffix = nodeName.substr(cpS, nnS - cpS);
-					
-					retNode = boost::none;
-					
 					for(auto checkNode = mSuffixes.begin();	checkNode != mSuffixes.end() && (*checkNode) != nullptr; checkNode++) {
 						
 						if(findCommonPrefix((*checkNode)->mPrefix,suffix) != ""){
 							if(depth >= 0) std::cout << ds << " - found matching prefix \"" << (*checkNode)->mPrefix << "\"" << std::endl;
-							retNode = (*checkNode)->find(suffix,depth);
+							retVal = (*checkNode)->find(suffix,depth);
 							break;
 						}
 					}
 				}
 				
-				return retNode;
+				return retVal;
 			}
 			
-			CacheNode& insert(std::string nodeName, Contents contents, int depth = -1) {
+			CacheNode& insert(std::string nodeName, std::unique_ptr<Contents> &contents, int depth = -1) {
 				std::string ds;
 				if(depth >= 0){
 					depth++;
@@ -99,54 +73,57 @@ namespace LDParse {
 				}
 				std::string commonPrefix = findCommonPrefix(mPrefix,nodeName);
 				std::string curSuffix;
-				AssertFatal(commonPrefix != "" || mPrefix == "", "We have arrived at a non-root node, and the common prefix is empty. This should never happen");
-				int cpS = commonPrefix.size();
-				int nnS = nodeName.size();
-				int mpS = mPrefix.size();
+				assert((commonPrefix != "" || mPrefix == "") && "We have arrived at a non-root node, and the common prefix is empty. This should never happen");
+				size_t cpS = commonPrefix.size();
+				size_t nnS = nodeName.size();
+				size_t mpS = mPrefix.size();
+				CacheNode * retNode = nullptr;
 				if((mpS == 0 && cpS == 0) || (cpS < nnS && cpS == mpS)){ // ("","something") or ("cat","catsup")
 					curSuffix = nodeName.substr(cpS, nnS - cpS);
 					std::unique_ptr<CacheNode> sufNode(new CacheNode(curSuffix));
-					CacheNode * checkNode = nullptr;
-					for(auto checkIt = mSuffixes.begin(); checkIt != mSuffixes.end() && (*checkIt) != nullptr; checkIt++) {
-						checkNode = *checkIt;
-						if(findCommonPrefix(curSuffix,checkNode->mPrefix) == "") checkNode = nullptr;
+					boost::optional<CacheNode&> checkNode = boost::none;
+					for(auto checkIt = mSuffixes.begin(); checkIt != mSuffixes.end() && (*checkIt); checkIt++) {
+						checkNode = **checkIt;
+						if(findCommonPrefix(curSuffix,checkNode->mPrefix) == "") checkNode = boost::none;
 						else break;
 					}
-					if(checkNode == nullptr){
-						mSuffixes.insert(sufNode);
-						sufNode->setContents(contents);
-						return *sufNode;
-					} else {
+					
+					if(checkNode) {
 						// sufNode will delete itself, because yay unique_ptr
-						return checkNode->insert(curSuffix, contents, depth);
+						retNode = &(checkNode->insert(curSuffix, contents, depth));
+					} else {
+						sufNode->setContents(contents);
+						retNode = sufNode.get();
+						mSuffixes.insert(std::move(sufNode));
 					}
 					
 				} else if(nnS == cpS && cpS == mpS){ // ("catsup","catsup")
-					// AssertFatal(mContents == NULL || contents == NULL,"Overwriting LDCacheNode contents. This shouldn't happen, and the error is with whoever thought the same file needed to be inserted twice (see callstack).");
+					assert((mContents == nullptr || contents == nullptr) && "Overwriting CacheNode contents. This shouldn't happen, and the error is with whoever thought the same file needed to be inserted twice (see callstack).");
 					if(contents != nullptr){
 						if(mContents != nullptr) std::cerr << "CacheNode::insert() - Overwriting CacheNode contents. This should never happen - try running in DEBUG mode." << std::endl;
-						mContents = contents;
+						setContents(contents);
 					}
-					return *this;
+					retNode = this;
 				} else if (cpS > 0 && cpS < mpS){ // ("catsup","cat")
 												  // We split!
 					curSuffix = mPrefix.substr(cpS, mpS - cpS);
-					std::unique_ptr<CacheNode> newChild(new CacheNode(curSuffix, mContents));
-					newChild->mSuffixes = mSuffixes;
+					std::unique_ptr<CacheNode> newChild(new CacheNode(curSuffix, std::move(mContents)));
+					newChild->mSuffixes = std::move(mSuffixes);
 					
 					mSuffixes.clear();
-					mSuffixes.insert(newChild);
+					mSuffixes.insert(std::move(newChild));
 					mPrefix = commonPrefix;
 					if(nnS == cpS){
-						mContents = contents;
-						return *this;
+						setContents(contents);
+						retNode = this;
 					} else{
 						curSuffix = nodeName.substr(cpS, nnS - cpS);
-						std::unique_ptr<CacheNode> sufNode = new CacheNode(curSuffix, contents);
-						mSuffixes.insert(sufNode);
-						return *sufNode;
+						std::unique_ptr<CacheNode> sufNode(new CacheNode(curSuffix, std::move(contents)));
+						retNode = sufNode.get();
+						mSuffixes.insert(std::move(sufNode));
 					}
 				} else{ // WTF?
+					retNode = nullptr; // Just to be safe, make sure we really blow up.
 					std::cerr << "CacheNode::insert() - This is a peculiar circumstance. Try running in DEBUG mode" << std::endl;
 					std::cerr << "CacheNode::insert() - node has " << mPrefix << ", trying to insert " << nodeName << " (common prefix " << commonPrefix << ")" << std::endl;
 					std::cerr << "CacheNode::insert() - Node has children - " << std::endl;
@@ -155,6 +132,7 @@ namespace LDParse {
 					}
 					//AssertFatal(false, "CacheNode::insert() - This is a peculiar circumstance. Please inspect me in the Debugger");
 				}
+				return *retNode;
 			}
 			
 			
@@ -163,12 +141,15 @@ namespace LDParse {
 				withme += mPrefix;
 				out << withme << std::endl;
 				for(auto it = mSuffixes.begin(); it != mSuffixes.end(); it++){
-					it->dump(out, withme);
+					(*it)->dump(out, withme);
 				}
 			}
 			
-			void setContents(Contents newContents){mContents = newContents;}
-			Contents getContents() const {return mContents;};
+			void setContents(std::unique_ptr<Contents> &newContents){
+				mContents = std::move(newContents);
+			}
+			
+			boost::optional<Contents&> getContents() const {return mContents ? boost::optional<Contents&>(*mContents) : boost::none;};
 			
 			static std::string findCommonPrefix(std::string str1, std::string str2){
 				static std::locale fcpLocale;
@@ -185,11 +166,11 @@ namespace LDParse {
 				return prefix;
 			}
 			
-			static CacheNode* makeRoot(){ return new CacheNode; }
+			static CacheNode* makeRoot(){ return (new CacheNode); }
 			
-			~CacheNode();
-			CacheNode(std::string prefix="", boost::optional<Contents> contents = boost::none)
-			: mPrefix(prefix), mContents(contents) {
+			
+			CacheNode(std::string prefix = "", std::unique_ptr<Contents> contents = nullptr) : mPrefix(prefix) {
+				setContents(contents);
 				mSuffixes.clear();
 			}
 			
