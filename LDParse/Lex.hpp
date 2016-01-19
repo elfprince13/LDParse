@@ -13,7 +13,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <limits>
 
 #include <boost/variant.hpp>
@@ -92,7 +92,7 @@ namespace LDParse {
 			Lex, String, Discard
 		} LexState;
 		
-		static const std::map<std::string, TokenKind> keywordMap;
+		static const std::unordered_map<std::string, TokenKind> keywordMap;
 		
 		
 		Lexer(std::istream &input, ErrFType errHandler) : mInput(input), mErrHandler(errHandler), mBOF(mInput.tellg()) {mInput >> std::noskipws;}
@@ -170,7 +170,7 @@ namespace LDParse {
 	};
 	
 	template<typename ErrFType>
-	const std::map<std::string, TokenKind> Lexer<ErrFType>::keywordMap = {
+	const std::unordered_map<std::string, TokenKind> Lexer<ErrFType>::keywordMap = {
 		{"0", Zero}, {"1", One}, {"2", Two}, {"3", Three}, {"4", Four}, {"5",Five},
 		{"STEP", Step}, {"PAUSE", Pause}, {"WRITE", Write}, {"PRINT", Write}, {"CLEAR", Clear}, {"SAVE", Save},
 		{"!COLOUR", Colour}, {"CODE", Code}, {"VALUE", Value}, {"EDGE", Edge}, {"ALPHA", Alpha}, {"LUMINANCE", Luminance},

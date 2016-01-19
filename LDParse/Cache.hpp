@@ -11,7 +11,7 @@
 
 #include <algorithm>
 #include <string>
-#include <set>
+#include <vector>
 #include <locale>
 #include <iostream>
 #include <cassert>
@@ -23,7 +23,7 @@ namespace LDParse {
 		private:
 			std::unique_ptr<Contents> mContents;
 			std::string mPrefix;
-			std::set<std::unique_ptr<CacheNode>> mSuffixes;
+			std::vector<std::unique_ptr<CacheNode>> mSuffixes; // Semantically, this is a set, but we don't use any of the nice set operations, so...
 			
 		public:
 			boost::optional<Contents&> find(std::string nodeName, int depth=-1) const {
@@ -65,7 +65,7 @@ namespace LDParse {
 				return retVal;
 			}
 			
-			CacheNode& insert(std::string nodeName, std::unique_ptr<Contents> &contents, int depth = -1) {
+			CacheNode& insert(std::string nodeName, std::unique_ptr<Contents> contents, int depth = -1) {
 				std::string ds;
 				if(depth >= 0){
 					depth++;
@@ -90,18 +90,18 @@ namespace LDParse {
 					
 					if(checkNode) {
 						// sufNode will delete itself, because yay unique_ptr
-						retNode = &(checkNode->insert(curSuffix, contents, depth));
+						retNode = &(checkNode->insert(curSuffix, std::move(contents), depth));
 					} else {
-						sufNode->setContents(contents);
+						sufNode->setContents(std::move(contents));
 						retNode = sufNode.get();
-						mSuffixes.insert(std::move(sufNode));
+						mSuffixes.push_back(std::move(sufNode));
 					}
 					
 				} else if(nnS == cpS && cpS == mpS){ // ("catsup","catsup")
 					assert((mContents == nullptr || contents == nullptr) && "Overwriting CacheNode contents. This shouldn't happen, and the error is with whoever thought the same file needed to be inserted twice (see callstack).");
 					if(contents != nullptr){
 						if(mContents != nullptr) std::cerr << "CacheNode::insert() - Overwriting CacheNode contents. This should never happen - try running in DEBUG mode." << std::endl;
-						setContents(contents);
+						setContents(std::move(contents));
 					}
 					retNode = this;
 				} else if (cpS > 0 && cpS < mpS){ // ("catsup","cat")
@@ -111,16 +111,16 @@ namespace LDParse {
 					newChild->mSuffixes = std::move(mSuffixes);
 					
 					mSuffixes.clear();
-					mSuffixes.insert(std::move(newChild));
+					mSuffixes.push_back(std::move(newChild));
 					mPrefix = commonPrefix;
 					if(nnS == cpS){
-						setContents(contents);
+						setContents(std::move(contents));
 						retNode = this;
 					} else{
 						curSuffix = nodeName.substr(cpS, nnS - cpS);
 						std::unique_ptr<CacheNode> sufNode(new CacheNode(curSuffix, std::move(contents)));
 						retNode = sufNode.get();
-						mSuffixes.insert(std::move(sufNode));
+						mSuffixes.push_back(std::move(sufNode));
 					}
 				} else{ // WTF?
 					retNode = nullptr; // Just to be safe, make sure we really blow up.
@@ -145,7 +145,7 @@ namespace LDParse {
 				}
 			}
 			
-			void setContents(std::unique_ptr<Contents> &newContents){
+			void setContents(std::unique_ptr<Contents> newContents){
 				mContents = std::move(newContents);
 			}
 			
@@ -170,7 +170,7 @@ namespace LDParse {
 			
 			
 			CacheNode(std::string prefix = "", std::unique_ptr<Contents> contents = nullptr) : mPrefix(prefix) {
-				setContents(contents);
+				setContents(std::move(contents));
 				mSuffixes.clear();
 			}
 			

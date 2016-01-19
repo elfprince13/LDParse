@@ -36,10 +36,14 @@ namespace LDParse{
 		Invert = 1
 	} BFCStatus;
 	
+	class ColorTable {
+		
+	};
 	
 	class Model {
+		friend class ModelBuilder;
 	public:
-		typedef Cache::CacheNode<Model> CacheType;
+		typedef Cache::CacheNode<const Model> CacheType;
 	private:
 		std::string mName;
 		std::string mSrcLoc;
@@ -49,8 +53,28 @@ namespace LDParse{
 		LDMesh data;
 		size_t color;
 		std::vector<std::tuple<size_t, BFCStatus, TransMatrix, const Model*> > children;
-		std::map<const Model*, std::pair<std::pair<size_t, size_t>, std::pair<size_t, size_t>> > childOffsets;
+		std::unordered_map<const Model*, std::pair<std::pair<size_t, size_t>, std::pair<size_t, size_t>> > childOffsets;
 
+		
+		template<typename ...ArgTs> struct CallbackMethod{
+			typedef Action(Model::*CallbackM)(ArgTs... args);
+			Model * mSelf;
+			const CallbackM mCallbackM;
+			CallbackMethod(Model * self, const CallbackM callbackM) : mSelf(self), mCallbackM(callbackM) {
+				assert((callbackM != nullptr) && "Can't call a null method");
+			}
+			Action operator()(ArgTs... args){
+				assert((mSelf != nullptr) && "Invalid target");
+				return (mSelf->*mCallbackM)(args ...);
+			}
+			
+			Model * retarget(Model * self){
+				std::swap(mSelf, self);
+				return self; // Return the old value
+			}
+			
+			
+		};
 		
 		/*
 		 typedef Action (*MPDF)(boost::optional<const std::string&> file);
@@ -71,30 +95,39 @@ namespace LDParse{
 			std::cout << std::endl;
 			
 			if(file && file->compare(mName)){
-				std::unique_ptr<Model> subModel(new Model(*file, mSrcLoc, MPDSubT));
-				mSubModels->insert(*file, subModel);
+				Model * subModel = new Model(*file, mSrcLoc, MPDSubT);
+				mSubModels->insert(*file, std::unique_ptr<Model>(subModel));
+				recordTo(subModel);
+			} else if(!file) {
+				recordTo(nullptr);
 			}
 			return Action();
 		}
+		CallbackMethod<boost::optional<const std::string&> > mpdCallback;
 		
-		template<typename ...ArgTs> struct CallbackMethod{
-			typedef Action(Model::*CallbackM)(ArgTs... args);
-			Model * mSelf;
-			CallbackM mCallbackM;
-			CallbackMethod(Model * self, CallbackM callbackM) : mSelf(self), mCallbackM(callbackM) {}
-			Action operator()(ArgTs... args){
-				return (mSelf->*mCallbackM)(args ...);
-			}
-		};
+		Action handleInclude(const ColorRef &c, const TransMatrix &t, const std::string &name){
+			return Action();
+		}
+		CallbackMethod<const ColorRef &, const TransMatrix &, const std::string &> inclCallback;
 		
-		// This causes Xcode to blow a gasket
-		//template<typename ...ArgTs> auto makeClosure(Action (Model::*handlerM)(ArgTs...)) -> decltype([&](ArgTs... args){ (this->*handlerM)(args ...) }) {
-		//	return [&](ArgTs... args){ (this->*handlerM)(args ...) };
-		//}
+		Action handleTriangle(const ColorRef &c, const Triangle &t){
+			return Action();
+		}
+		CallbackMethod<const ColorRef &, const Triangle &> triCallback;
+		
+		
+		
+		void recordTo(Model * subModel){
+			inclCallback.retarget(subModel);
+			triCallback.retarget(subModel);
+		}
 		
 	public:
 		Model(std::string name, std::string srcLoc, SrcType srcType)
-		: mName(name), mSrcLoc(srcLoc), mSrcType(srcType), mSubModels(mSrcType == MPDRootT ? CacheType::makeRoot() : nullptr) {}
+		: mName(name), mSrcLoc(srcLoc), mSrcType(srcType), mSubModels(mSrcType == MPDRootT ? CacheType::makeRoot() : nullptr),
+		mpdCallback(this, &Model::handleMPDCommand),
+		inclCallback(this, &Model::handleInclude),
+		triCallback(this, &Model::handleTriangle){}
 		
 		
 		template<typename ErrF> static Model* construct(std::string srcLoc, std::string modelName, std::istream &fileContents, ErrF errF, SrcType srcType = UnknownT){
@@ -118,10 +151,8 @@ namespace LDParse{
 			
 			ret = new Model(modelName, srcLoc, srcType);
 			
-			typedef CallbackMethod<boost::optional<const std::string&> > MPDCallback;
-			MPDCallback mpdCallback(ret, &Model::handleMPDCommand);
-			typedef Parser<MPDCallback, MetaF, InclF, LineF, TriF, QuadF, OptF, ErrF > ModelParser;
-			ModelParser parser(mpdCallback,
+			typedef Parser<decltype(mpdCallback), MetaF, InclF, LineF, TriF, QuadF, OptF, ErrF > ModelParser;
+			ModelParser parser(ret->mpdCallback,
 							   LDParse::DummyImpl::dummyMeta,
 							   LDParse::DummyImpl::dummyIncl,
 							   LDParse::DummyImpl::dummyLine,
