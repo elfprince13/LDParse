@@ -312,9 +312,7 @@ namespace LDParse {
 											break;
 										} /* 
 										else {
-											std::string errChar("x");
-											errChar[0] = *garbage_pos;
-											mErrHandler("Started lexing ident, found apparent garbage instead", errChar, false);
+											mErrHandler("Started lexing ident, found apparent garbage instead", std::string(1, *garbage_pos), false);
 										}
 										//*/
 									}

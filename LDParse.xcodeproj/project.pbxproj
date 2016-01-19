@@ -9,13 +9,12 @@
 /* Begin PBXBuildFile section */
 		E99D0D6A1C499F3F00278852 /* Geom.hpp in Headers */ = {isa = PBXBuildFile; fileRef = E99D0D681C499F3F00278852 /* Geom.hpp */; };
 		E99D0D6C1C4ABAE700278852 /* Parse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E99D0D6B1C4ABAE700278852 /* Parse.cpp */; };
+		E99D0D701C4D582C00278852 /* Model.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E99D0D6F1C4D582C00278852 /* Model.cpp */; };
 		E9DD320A1C46E06C00F2AE54 /* Parse.hpp in Headers */ = {isa = PBXBuildFile; fileRef = E9DD32091C46E06C00F2AE54 /* Parse.hpp */; };
 		E9DD32161C46E0A600F2AE54 /* Lex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E9DD32141C46E0A600F2AE54 /* Lex.cpp */; };
 		E9DD32171C46E0A600F2AE54 /* Lex.hpp in Headers */ = {isa = PBXBuildFile; fileRef = E9DD32151C46E0A600F2AE54 /* Lex.hpp */; };
 		E9DD321F1C4713EF00F2AE54 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E9DD321E1C4713EF00F2AE54 /* main.cpp */; };
 		E9DD32251C47140E00F2AE54 /* libLDParse.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E9DD32061C46E06C00F2AE54 /* libLDParse.a */; };
-		E9DD32381C48595F00F2AE54 /* AST.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E9DD32361C48595F00F2AE54 /* AST.cpp */; };
-		E9DD32391C48595F00F2AE54 /* AST.hpp in Headers */ = {isa = PBXBuildFile; fileRef = E9DD32371C48595F00F2AE54 /* AST.hpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,14 +44,15 @@
 		E99D0D6B1C4ABAE700278852 /* Parse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Parse.cpp; sourceTree = "<group>"; };
 		E99D0D6D1C4C71B100278852 /* ReadFs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadFs.hpp; sourceTree = "<group>"; };
 		E99D0D6E1C4C723100278852 /* Expect.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Expect.hpp; sourceTree = "<group>"; };
+		E99D0D6F1C4D582C00278852 /* Model.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Model.cpp; sourceTree = "<group>"; };
+		E99D0D711C4D587500278852 /* Model.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Model.hpp; sourceTree = "<group>"; };
+		E99D0D821C4D68DF00278852 /* Cache.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cache.hpp; sourceTree = "<group>"; };
 		E9DD32061C46E06C00F2AE54 /* libLDParse.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libLDParse.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		E9DD32091C46E06C00F2AE54 /* Parse.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Parse.hpp; sourceTree = "<group>"; };
 		E9DD32141C46E0A600F2AE54 /* Lex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Lex.cpp; sourceTree = "<group>"; };
 		E9DD32151C46E0A600F2AE54 /* Lex.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Lex.hpp; sourceTree = "<group>"; };
 		E9DD321C1C4713EF00F2AE54 /* ParseTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ParseTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E9DD321E1C4713EF00F2AE54 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		E9DD32361C48595F00F2AE54 /* AST.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AST.cpp; sourceTree = "<group>"; };
-		E9DD32371C48595F00F2AE54 /* AST.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = AST.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,15 +95,16 @@
 		E9DD32081C46E06C00F2AE54 /* LDParse */ = {
 			isa = PBXGroup;
 			children = (
-				E9DD32361C48595F00F2AE54 /* AST.cpp */,
-				E9DD32371C48595F00F2AE54 /* AST.hpp */,
-				E99D0D6B1C4ABAE700278852 /* Parse.cpp */,
-				E9DD32091C46E06C00F2AE54 /* Parse.hpp */,
+				E99D0D821C4D68DF00278852 /* Cache.hpp */,
 				E99D0D6E1C4C723100278852 /* Expect.hpp */,
 				E99D0D6D1C4C71B100278852 /* ReadFs.hpp */,
+				E99D0D681C499F3F00278852 /* Geom.hpp */,
 				E9DD32141C46E0A600F2AE54 /* Lex.cpp */,
 				E9DD32151C46E0A600F2AE54 /* Lex.hpp */,
-				E99D0D681C499F3F00278852 /* Geom.hpp */,
+				E99D0D6F1C4D582C00278852 /* Model.cpp */,
+				E99D0D711C4D587500278852 /* Model.hpp */,
+				E99D0D6B1C4ABAE700278852 /* Parse.cpp */,
+				E9DD32091C46E06C00F2AE54 /* Parse.hpp */,
 			);
 			path = LDParse;
 			sourceTree = "<group>";
@@ -123,7 +124,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E9DD32391C48595F00F2AE54 /* AST.hpp in Headers */,
 				E9DD32171C46E0A600F2AE54 /* Lex.hpp in Headers */,
 				E99D0D6A1C499F3F00278852 /* Geom.hpp in Headers */,
 				E9DD320A1C46E06C00F2AE54 /* Parse.hpp in Headers */,
@@ -209,7 +209,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E99D0D6C1C4ABAE700278852 /* Parse.cpp in Sources */,
-				E9DD32381C48595F00F2AE54 /* AST.cpp in Sources */,
+				E99D0D701C4D582C00278852 /* Model.cpp in Sources */,
 				E9DD32161C46E0A600F2AE54 /* Lex.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

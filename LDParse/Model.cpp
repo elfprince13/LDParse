@@ -1,9 +1,9 @@
 //
-//  AST.cpp
+//  Model.cpp
 //  LDParse
 //
-//  Created by Thomas Dickerson on 1/14/16.
+//  Created by Thomas Dickerson on 1/18/16.
 //  Copyright © 2016 StickFigure Graphic Productions. All rights reserved.
 //
 
-#include "AST.hpp"
+#include "Model.hpp"
