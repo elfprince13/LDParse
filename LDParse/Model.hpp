@@ -17,6 +17,8 @@
 
 #include <iostream>
 #include <unordered_set>
+#include <forward_list>
+#include <boost/logic/tribool.hpp>
 
 namespace LDParse{
 
@@ -41,28 +43,32 @@ namespace LDParse{
 	class Model {
 	public:
 		typedef Cache::CacheNode<const Model> CacheType;
+		typedef Cache::CacheNode<const size_t> IndexType;
 	private:
 		std::string mName;
 		std::string mSrcLoc;
 		SrcType mSrcType;
-		boost::optional<std::unordered_set<std::string> > mSubModelNames;
-		std::unique_ptr<CacheType> mSubModels;
+		const std::shared_ptr<const IndexType> mSubModelNames;
+		std::shared_ptr<CacheType> mSubModels; // This is shared across the whole MPD
 		ColorTable &mColorTable;
 
 		LDMesh mData;
 		size_t mColor;
 		std::vector<std::tuple<size_t, BFCStatus, TransMatrix, const Model*> > mChildren;
 		std::unordered_map<const Model*, std::pair<std::pair<size_t, size_t>, std::pair<size_t, size_t>> > mChildOffsets;
+		std::vector<size_t> mStepEnds;
+		boost::logic::tribool mCertify;
 
 		
-		template<typename ...ArgTs> struct CallbackMethod{
-			typedef Action(Model::*CallbackM)(ArgTs... args);
+		template<typename R, typename ...ArgTs> struct CallbackMethod{
+		public:
+			typedef R(Model::*CallbackM)(ArgTs... args);
 			Model * mSelf;
 			const CallbackM mCallbackM;
 			CallbackMethod(Model * self, const CallbackM callbackM) : mSelf(self), mCallbackM(callbackM) {
 				assert((callbackM != nullptr) && "Can't call a null method");
 			}
-			Action operator()(ArgTs... args){
+			R operator()(ArgTs... args){
 				assert((mSelf != nullptr) && "Invalid target");
 				return (mSelf->*mCallbackM)(args ...);
 			}
@@ -74,23 +80,24 @@ namespace LDParse{
 		};
 		
 		Action handleMPDCommand(boost::optional<const std::string&> file);
-		CallbackMethod<boost::optional<const std::string&> > mpdCallback;
+		CallbackMethod<Action, boost::optional<const std::string&> > mpdCallback;
 		
 		Action handleInclude(const ColorRef &c, const TransMatrix &t, const std::string &name);
-		CallbackMethod<const ColorRef &, const TransMatrix &, const std::string &> inclCallback;
+		CallbackMethod<Action, const ColorRef &, const TransMatrix &, const std::string &> inclCallback;
 		
 		Action handleTriangle(const ColorRef &c, const Triangle &t);
-		CallbackMethod<const ColorRef &, const Triangle &> triCallback;
+		CallbackMethod<Action, const ColorRef &, const Triangle &> triCallback;
 		
 		Action handleQuad(const ColorRef &c, const Quad &q);
-		CallbackMethod<const ColorRef &, const Quad &> quadCallback;
+		CallbackMethod<Action, const ColorRef &, const Quad &> quadCallback;
 		
-		
+		void handleEOF();
+		CallbackMethod<void> eofCallback;
 		
 		void recordTo(Model * subModel);
 		
 	public:
-		Model(std::string name, std::string srcLoc, SrcType srcType, ColorTable& colorTable, boost::optional<std::unordered_set<std::string> > subModelNames = boost::none);
+		Model(std::string name, std::string srcLoc, SrcType srcType, ColorTable& colorTable, const std::shared_ptr<const IndexType> subModelNames = nullptr, std::shared_ptr<CacheType> subModels = nullptr);
 		
 		
 		template<typename ErrF> static Model* construct(std::string srcLoc, std::string modelName, std::istream &fileContents, ColorTable& colorTable, ErrF errF, SrcType srcType = UnknownT){
@@ -100,6 +107,9 @@ namespace LDParse{
 			ModelStream models;
 			std::string rootName = modelName;
 			bool isMPD = lexer.lexModelBoundaries(models, rootName);
+			
+			std::shared_ptr<IndexType> subModelNames = nullptr;
+			
 			if(isMPD){
 				if(srcType < ModelT) {
 					errF("Was told this file was not an MPD, but MPD commands were found", modelName, false);
@@ -110,11 +120,17 @@ namespace LDParse{
 					srcLoc += modelName;
 					modelName = rootName;
 				}
+				subModelNames = std::shared_ptr<IndexType>(IndexType::makeRoot());
+				size_t modelCount = models.size();
+				for(size_t i = 0; i < modelCount; i++){
+					size_t *dst = new size_t(i);
+					subModelNames->insert(models[i].first, std::unique_ptr<size_t>(dst));
+				}
 			}
 			
-			ret = new Model(modelName, srcLoc, srcType, colorTable);
+			ret = new Model(modelName, srcLoc, srcType, colorTable, subModelNames);
 			
-			typedef Parser<decltype(mpdCallback), MetaF, decltype(inclCallback), LineF, decltype(triCallback), decltype(quadCallback), OptF, ErrF > ModelParser;
+			typedef Parser<decltype(mpdCallback), MetaF, decltype(inclCallback), LineF, decltype(triCallback), decltype(quadCallback), OptF, decltype(eofCallback), ErrF > ModelParser;
 			ModelParser parser(ret->mpdCallback,
 							   LDParse::DummyImpl::dummyMeta,
 							   ret->inclCallback,
@@ -122,6 +138,7 @@ namespace LDParse{
 							   ret->triCallback,
 							   ret->quadCallback,
 							   LDParse::DummyImpl::dummyOpt,
+							   ret->eofCallback,
 							   errF);
 			
 			if(!parser.parseModels(models)){

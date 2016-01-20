@@ -45,14 +45,14 @@ namespace LDParse{
 		
 	}
 		
-	template<typename MPDHandler, typename MetaHandler, typename IncludeHandler, typename LineHandler, typename TriangleHandler, typename QuadHandler, typename OptHandler, typename ErrHandler> class Parser
+	template<typename MPDHandler, typename MetaHandler, typename IncludeHandler, typename LineHandler, typename TriangleHandler, typename QuadHandler, typename OptHandler, typename EOFHandler, typename ErrHandler> class Parser
 	{
 	private:
 		Winding winding;
 		ErrHandler &mErr;
 	public:
 		template<typename Out> using ReadF = ReadF<Out, ErrHandler>;
-		typedef Parser<MPDHandler, MetaHandler, IncludeHandler, LineHandler, TriangleHandler, QuadHandler, OptHandler, ErrHandler> SelfType;
+		typedef Parser<MPDHandler, MetaHandler, IncludeHandler, LineHandler, TriangleHandler, QuadHandler, OptHandler, EOFHandler, ErrHandler> SelfType;
 		
 		typedef Expect<void, TokenStream::const_iterator, 0, ExpectTokenStrings::strEOL, ErrHandler> ExpectEOL;
 		ExpectEOL expectEOL;
@@ -91,11 +91,12 @@ namespace LDParse{
 		TriangleHandler &mTri;
 		QuadHandler &mQuad;
 		OptHandler &mOpt;
+		EOFHandler &mEOF;
 		
 	public:
-		Parser(MPDHandler &mpd, MetaHandler &m, IncludeHandler &i, LineHandler &l, TriangleHandler &t, QuadHandler &q, OptHandler &o, ErrHandler &e)
+		Parser(MPDHandler &mpd, MetaHandler &m, IncludeHandler &i, LineHandler &l, TriangleHandler &t, QuadHandler &q, OptHandler &o, EOFHandler &eof, ErrHandler &e)
 		:  winding(CCW), mErr(e),
-		mMPD(mpd), mMeta(m), mIncl(i), mLine(l), mTri(t), mQuad(q), mOpt(o),
+		mMPD(mpd), mMeta(m), mIncl(i), mLine(l), mTri(t), mQuad(q), mOpt(o), mEOF(eof),
 		expectEOL(mErr),
 		expectColor(mErr, (ReadF<ColorRef>)readColor),
 		expectNumber(mErr, readNumber),
@@ -216,10 +217,11 @@ namespace LDParse{
 						
 						while(lineIt == modelIt->second.end()){
 							completed[std::distance(models.begin(), modelIt)] = true;
+							mEOF();
 							if(scanStack.size()){
 								std::tie(modelIt, lineIt) = scanStack.back();
 								scanStack.pop_back();
-								++lineIt;
+								//++lineIt; // We want to repeat the last line before the SwitchFile Action. This is easier than implementing a general deferral mechanism
 							} else {
 								break;
 							}
@@ -249,6 +251,7 @@ namespace LDParse{
 	typedef Action (*TriF)(const ColorRef &c, const Triangle &t);
 	typedef Action (*QuadF)(const ColorRef &c, const Quad &q);
 	typedef Action (*OptF)(const ColorRef &c, const OptLine &o);
+	typedef void (*EOFF)();
 	
 	namespace DummyImpl {
 		static MPDF dummyMPD = [](boost::optional<const std::string&>){ return Action(); };
@@ -258,9 +261,10 @@ namespace LDParse{
 		static TriF dummyTri = [](const ColorRef &c, const Triangle &t){ return Action(); };
 		static QuadF dummyQuad = [](const ColorRef &c, const Quad &q){ return Action(); };
 		static OptF dummyOpt = [](const ColorRef &c, const OptLine &l){ return Action(); };
+		static EOFF dummyEOF = [](){};
 	};
 	
-	typedef Parser<MPDF, MetaF, InclF, LineF, TriF, QuadF, OptF, ErrF> CallbackParser;
+	typedef Parser<MPDF, MetaF, InclF, LineF, TriF, QuadF, OptF, EOFF, ErrF> CallbackParser;
 	
 	
 }
