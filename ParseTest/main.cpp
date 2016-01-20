@@ -11,6 +11,7 @@
 #include "Lex.hpp"
 #include "Parse.hpp"
 #include "Model.hpp"
+#include "ModelBuilder.hpp"
 
 void err(std::string msg, std::string tok, bool fatal) {
 	std::cerr << (fatal ? "Error: " : "Warning: ") << msg << " ( " << tok << " )" << std::endl;
@@ -50,8 +51,8 @@ int main(int argc, const char * argv[]) {
 	std::ifstream file(fileName);
 	
 	LDParse::ColorTable colors;
-	
-	LDParse::Model * model = LDParse::Model::construct(fileName, fileName, file, colors, errF);
+	LDParse::ModelBuilder<LDParse::ErrF> modelBuilder(errF);
+	LDParse::Model * model = modelBuilder.construct(fileName, fileName, file, colors);
 	
 	/*
 	

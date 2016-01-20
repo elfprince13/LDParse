@@ -44,6 +44,9 @@
 /* Begin PBXFileReference section */
 		E978EB5F1C4EF1EF00509462 /* Color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Color.cpp; sourceTree = "<group>"; };
 		E978EB601C4EF1EF00509462 /* Color.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Color.hpp; sourceTree = "<group>"; };
+		E98347ED1C5013E700A77A1D /* ModelBuilder.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ModelBuilder.hpp; sourceTree = "<group>"; };
+		E98347EE1C50156F00A77A1D /* ModelBuilderDefs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = ModelBuilderDefs.hpp; path = ModelBuilder/ModelBuilderDefs.hpp; sourceTree = "<group>"; };
+		E98347F01C50159D00A77A1D /* ModelBuilderImpl.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = ModelBuilderImpl.hpp; path = ModelBuilder/ModelBuilderImpl.hpp; sourceTree = "<group>"; };
 		E99D0D681C499F3F00278852 /* Geom.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Geom.hpp; sourceTree = "<group>"; };
 		E99D0D6B1C4ABAE700278852 /* Parse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Parse.cpp; sourceTree = "<group>"; };
 		E99D0D6D1C4C71B100278852 /* ReadFs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ReadFs.hpp; sourceTree = "<group>"; };
@@ -78,6 +81,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		E98347EF1C50157900A77A1D /* ModelBuilder */ = {
+			isa = PBXGroup;
+			children = (
+				E98347EE1C50156F00A77A1D /* ModelBuilderDefs.hpp */,
+				E98347F01C50159D00A77A1D /* ModelBuilderImpl.hpp */,
+			);
+			name = ModelBuilder;
+			sourceTree = "<group>";
+		};
 		E9DD31FD1C46E06C00F2AE54 = {
 			isa = PBXGroup;
 			children = (
@@ -99,6 +111,7 @@
 		E9DD32081C46E06C00F2AE54 /* LDParse */ = {
 			isa = PBXGroup;
 			children = (
+				E98347EF1C50157900A77A1D /* ModelBuilder */,
 				E99D0D821C4D68DF00278852 /* Cache.hpp */,
 				E978EB5F1C4EF1EF00509462 /* Color.cpp */,
 				E978EB601C4EF1EF00509462 /* Color.hpp */,
@@ -109,6 +122,7 @@
 				E9DD32151C46E0A600F2AE54 /* Lex.hpp */,
 				E99D0D6F1C4D582C00278852 /* Model.cpp */,
 				E99D0D711C4D587500278852 /* Model.hpp */,
+				E98347ED1C5013E700A77A1D /* ModelBuilder.hpp */,
 				E99D0D6B1C4ABAE700278852 /* Parse.cpp */,
 				E9DD32091C46E06C00F2AE54 /* Parse.hpp */,
 			);

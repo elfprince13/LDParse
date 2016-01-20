@@ -21,7 +21,8 @@ namespace LDParse{
 	typedef enum {
 		SwitchFile,
 		SkipNLines,
-		NoAction
+		NoAction,
+		StopParsing
 	} ActionKind;
 	
 	struct Action {
@@ -204,6 +205,9 @@ namespace LDParse{
 					
 					if(ret){
 						switch(nextAction.k){
+							case StopParsing:
+								ret = nextAction.v;
+								goto PARSING_MEGA_BREAK;
 							case SwitchFile:
 								scanStack.push_back(std::make_pair(modelIt, lineIt));
 								std::advance((modelIt = models.begin()), nextAction.v);
@@ -229,6 +233,7 @@ namespace LDParse{
 					}
 				}
 			}
+		PARSING_MEGA_BREAK:
 			return ret;
 		}
 		
