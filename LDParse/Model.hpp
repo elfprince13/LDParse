@@ -52,6 +52,8 @@ namespace LDParse{
 		const std::shared_ptr<const IndexType> mSubModelNames;
 		std::shared_ptr<CacheType> mSubModels; // This is shared across the whole MPD
 		ColorTable &mColorTable;
+		std::unordered_map<uint16_t, uint16_t> mLocalColors;
+		std::unordered_map<uint16_t, uint16_t> mLocalComplements; // This is a bit of an abomination,
 
 		LDMesh mData;
 		size_t mColor;

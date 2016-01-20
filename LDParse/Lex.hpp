@@ -87,12 +87,22 @@ namespace LDParse {
 		std::istream& mInput;
 		const std::streampos mBOF;
 		ErrFType mErrHandler;
+		
+		static const std::unordered_multimap<TokenKind, std::string, std::hash<uint32_t> > invertMap(const std::unordered_map<std::string, TokenKind> &src){
+			std::unordered_multimap<TokenKind, std::string, std::hash<uint32_t> > dst;
+			for(auto it = src.begin(); it != src.end(); ++it){
+				dst.insert(std::make_pair(it->second, it->first));
+			}
+			return dst;
+		}
+		
 	public:
 		typedef enum {
 			Lex, String, Discard
 		} LexState;
 		
 		static const std::unordered_map<std::string, TokenKind> keywordMap;
+		static const std::unordered_multimap<TokenKind, std::string, std::hash<uint32_t> > keywordRevMap;
 		
 		
 		Lexer(std::istream &input, ErrFType errHandler) : mInput(input), mErrHandler(errHandler), mBOF(mInput.tellg()) {mInput >> std::noskipws;}
@@ -179,6 +189,9 @@ namespace LDParse {
 		{"BFC", BFC}, {"CERTIFY", Certify}, {"NOCERTIFY", NoCertify}, {"CLIP", Clip}, {"NOCLIP", NoClip},
 		{"CW", Orientation}, {"CCW", Orientation}, {"INVERTNEXT", InvertNext}
 	};
+	
+	template<typename ErrFType>
+	const std::unordered_multimap<TokenKind, std::string, std::hash<uint32_t> > Lexer<ErrFType>::keywordRevMap = invertMap(Lexer<ErrFType>::keywordMap);
 	
 	static std::string AllowedSpecialChars = "._,-~/\\#:()[]";
 	

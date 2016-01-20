@@ -17,7 +17,7 @@
 
 namespace LDParse{
 	
-	typedef std::tuple<bool, uint32_t> ColorRef;
+	typedef std::pair<bool, uint32_t> ColorRef;
 	typedef std::tuple<float, float, float> Position;
 	typedef std::tuple<Position, Position, Position> Line;
 	typedef std::tuple<Position, Position, Position> Triangle;
@@ -36,17 +36,19 @@ namespace LDParse{
 		template<size_t i> using AttrType = typename std::tuple_element<i, AttrsType>::type;
 		AttrsType attributes;
 		std::vector<uint32_t> indices;
+		std::vector<uint32_t> bfIndices; // We may store reverse copies of certain triangles
 		
-		std::pair<size_t, size_t> mergeMesh(const SelfType &merge, std::tuple<void(AttrTypes&) ...> txformFs = std::make_tuple(identity<AttrTypes>() ...)){
+		template<typename ...TxFormFs> void mergeMesh(const SelfType &merge, std::tuple<TxFormFs ...> txformFs = std::make_tuple(identity<AttrTypes>() ...)){
 			const size_t offset = vertexCount();
-			size_t indexCt = indices.size();
+			//size_t indexCt = indices.size();
 			mergeHelper(merge, txformFs);
-			appendVector(indices, merge.indices, [](uint32_t &index){ index += offset; });
-			size_t niCt = indices.size();
+			const auto offsetF = [](uint32_t &index){ index += offset; };
+			appendVector(indices, merge.indices, offsetF);
+			appendVector(bfIndices, merge.bfIndices, offsetF);
+			//size_t niCt = indices.size();
 			/*for(size_t i = indexCt; i < niCt; ++i){
 				indices[i] += offset;
 			}*/
-			return std::make_pair(indexCt, niCt);
 		}
 		
 		size_t vertexCount() const {

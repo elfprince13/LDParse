@@ -43,6 +43,7 @@ namespace LDParse{
 		constexpr static const char strCOL[] = "color reference";
 		constexpr static const char strMAT[] = "transformation matrix";
 		constexpr static const char strID[] = "identifier";
+		constexpr static const char strKW[] = "specific keyword";
 		
 	}
 		
@@ -54,6 +55,9 @@ namespace LDParse{
 	public:
 		template<typename Out> using ReadF = ReadF<Out, ErrHandler>;
 		typedef Parser<MPDHandler, MetaHandler, IncludeHandler, LineHandler, TriangleHandler, QuadHandler, OptHandler, EOFHandler, ErrHandler> SelfType;
+		
+		typedef Expect<ReadF<const TokenKind>, const TokenKind, 1, ExpectTokenStrings::strKW, ErrHandler> ExpectKeyword;
+		ExpectKeyword expectKeyword;
 		
 		typedef Expect<void, TokenStream::const_iterator, 0, ExpectTokenStrings::strEOL, ErrHandler> ExpectEOL;
 		ExpectEOL expectEOL;
@@ -98,8 +102,9 @@ namespace LDParse{
 		Parser(MPDHandler &mpd, MetaHandler &m, IncludeHandler &i, LineHandler &l, TriangleHandler &t, QuadHandler &q, OptHandler &o, EOFHandler &eof, ErrHandler &e)
 		:  winding(CCW), mErr(e),
 		mMPD(mpd), mMeta(m), mIncl(i), mLine(l), mTri(t), mQuad(q), mOpt(o), mEOF(eof),
+		expectKeyword(mErr, readKeyword),
 		expectEOL(mErr),
-		expectColor(mErr, (ReadF<ColorRef>)readColor),
+		expectColor(mErr, readColor),
 		expectNumber(mErr, readNumber),
 		expectIdent(mErr, readIdent),
 		expectPosition(mErr, readPosition),
@@ -134,11 +139,9 @@ namespace LDParse{
 									switch((token++)->k){
 										case File:{
 											std::string name;
-											ret &= expectIdent(token, eol, name);
-											if(ret){
+											if(ret &= expectIdent(token, eol, name)){
 												coalesceText(token, eol, name);
-												ret &= expectEOL(token, eol);
-												if(ret) nextAction = mMPD(name);
+												if(ret &= expectEOL(token, eol)) nextAction = mMPD(name);
 											}
 											break;
 										}
@@ -157,43 +160,38 @@ namespace LDParse{
 								break;
 							case One: {
 								ColorRef color; TransMatrix mat; std::string name;
-								ret &= expectColor(token, eol, color)
-									&& expectMat(token, eol, mat)
-									&& expectIdent(token, eol, name)
-									&& expectEOL(token, eol);
-								if(ret) nextAction = mIncl(color, mat, name);
+								if(ret &= expectColor(token, eol, color)
+								   && expectMat(token, eol, mat)
+								   && expectIdent(token, eol, name)
+								   && expectEOL(token, eol)) nextAction = mIncl(color, mat, name);
 								break;
 							}
 							case Two: {
 								ColorRef color; Line l;
-								ret &= expectColor(token, eol, color)
-									&& expectLine(token, eol, l)
-									&& expectEOL(token, eol);
-								if(ret) nextAction = mLine(color, l);
+								if(ret &= expectColor(token, eol, color)
+								   && expectLine(token, eol, l)
+								   && expectEOL(token, eol)) nextAction = mLine(color, l);
 								break;
 							}
 							case Three: {
 								ColorRef color; Triangle t;
-								ret &= expectColor(token, eol, color)
-									&& expectTriangle(token, eol, t)
-									&& expectEOL(token, eol);
-								if(ret) nextAction = mTri(color, t);
+								if(ret &= expectColor(token, eol, color)
+								   && expectTriangle(token, eol, t)
+								   && expectEOL(token, eol)) nextAction = mTri(color, t);
 								break;
 							}
 							case Four: {
 								ColorRef color; Quad q;
-								ret &= expectColor(token, eol, color)
-									&& expectQuad(token, eol, q)
-									&& expectEOL(token, eol);
-								if(ret) nextAction = mQuad(color, q);
+								if(ret &= expectColor(token, eol, color)
+								   && expectQuad(token, eol, q)
+								   && expectEOL(token, eol)) nextAction = mQuad(color, q);
 								break;
 							}
 							case Five: {
 								ColorRef color; OptLine l;
-								ret &= expectColor(token, eol, color)
-									&& expectOptLine(token, eol, l)
-									&& expectEOL(token, eol);
-								if(ret) nextAction = mOpt(color, l);
+								if(ret &= expectColor(token, eol, color)
+								   && expectOptLine(token, eol, l)
+								   && expectEOL(token, eol)) nextAction = mOpt(color, l);
 								break;
 							}
 							default:

@@ -13,7 +13,6 @@
 
 namespace LDParse {
 	
-	
 	template<typename ErrF>	Action ModelBuilder<ErrF>::handleMPDCommand(Model& target, boost::optional<const std::string&> file){
 		std::cout << "0 ";
 		if(file) {
@@ -34,40 +33,143 @@ namespace LDParse {
 	}
 	
 	template<typename ErrF>	Action ModelBuilder<ErrF>::handleMetaCommand(Model& target, TokenStream::const_iterator &tokenIt, const TokenStream::const_iterator &eolIt){
+		bool success = true;
 		switch ((tokenIt++)->k) {
-			case Colour:
+			case Colour: {
+				std::string name;
+				ColorRef code;
+				ColorRef v;
+				ColorRef e;
+				if(success &= mParser.expectIdent(tokenIt, eolIt, name)
+				   && mParser.expectKeyword(tokenIt, eolIt, Code)
+				   && mParser.expectColor(tokenIt, eolIt, code) && code.first
+				   && mParser.expectKeyword(tokenIt, eolIt, Value)
+				   && mParser.expectColor(tokenIt, eolIt, v) && !v.first
+				   && mParser.expectKeyword(tokenIt, eolIt, Edge)
+				   && mParser.expectColor(tokenIt, eolIt, e)){
+					v.second <<= 8; // Make room for alpha
+					if(!e.first){
+						e.second <<= 8;
+						e.second |= 0xff;
+					}
+					
+					if(tokenIt != eolIt && tokenIt->k == Alpha){
+						ColorRef alpha;
+						if(success &= mParser.expectColor(++tokenIt, eolIt, alpha)){
+							v.second |= (alpha.second & 0xff);
+						}
+					} else {
+						v.second |= 0xff;
+					}
+					// We don't care about other properties for now;
+				}
+				
+				if(success){
+					boost::optional<uint16_t> lVal;
+					if(target.mSrcType == ConfigT){
+						target.mColorTable.setColour(code.second, v.second);
+						target.mColorTable.setComplement(code.second, (e.first || !(lVal = target.mColorTable.addLocalColour(e.second))) ? e.second : *lVal);
+						success &= e.first || lVal; // We have garbage data if the !lVal condition above was true
+					} else {
+						if(success &= (bool)(lVal = target.mColorTable.addLocalColour(v.second))){
+							target.mLocalColors[code.second] = *lVal;
+							target.mColorTable.setComplement(code.second, (e.first || !(lVal = target.mColorTable.addLocalColour(e.second))) ? e.second : *lVal);
+							if((success &= e.first || lVal) && e.first) { // We have garbage data if the !lVal condition above was true
+								target.mLocalComplements[code.second] = e.second;
+							}
+						}
+					}
+					
+				}
 				break;
+			}
 			case Step:
+				target.mStepEnds.push_back(target.mData.indices.size());
 				break;
 			case BFC:
+				if(success &= (tokenIt != eolIt)){
+					bool leadingOrient = true;
+					switch (tokenIt->k) {
+						case InvertNext:
+							leadingOrient = false;
+							if(target.mCertify) {
+								mInvertNext.insert(&target);
+							} break;
+						case NoCertify:
+							leadingOrient = false;
+							target.mCertify = false;
+							break;
+						case NoClip:
+							leadingOrient = false;
+							if(target.mCertify){
+								mClipping.erase(&target);
+							} break;
+						case Certify:
+							leadingOrient = false;
+							if(success &= (indeterminate(target.mCertify) || (bool)target.mCertify)){
+								target.mCertify = true;
+								mClipping.insert(&target);
+								mWindings[&target] = CCW;
+								if (++tokenIt != eolIt && (success &= tokenIt->k == Orientation)) goto META_PARSE_ORIENTATION;
+								break;
+							}
+						META_PARSE_CLIP:
+						case Clip:
+							if(target.mCertify){
+								mClipping.insert(&target);
+								if (++tokenIt != eolIt && (success &= tokenIt->k == Orientation && !leadingOrient)){
+									leadingOrient = false;
+									goto META_PARSE_ORIENTATION;
+								} else {
+									leadingOrient = false;
+								}
+							} break;
+						META_PARSE_ORIENTATION:
+						case Orientation:
+							if(target.mCertify){
+								mWindings[&target] = boost::get<Winding>(tokenIt->v);
+								if(tokenIt != eolIt && (success &= tokenIt->k == Clip && leadingOrient))
+									goto META_PARSE_CLIP;
+							} break;
+						default:
+							success = false;
+							break;
+					}
+				}
 				break;
 			default:
 				break;
 		}
-		return Action();
+		return success ? Action() : Action(StopParsing, false);
 	}
 	
 	template<typename ErrF>	Action ModelBuilder<ErrF>::handleInclude(Model& target, const ColorRef &c, const TransMatrix &t, const std::string &name){
+		if(indeterminate(target.mCertify)) target.mCertify = false;
+		Action ret = Action();
 		boost::optional<const size_t&> subIndex;
 		boost::optional<const Model&> subModel;
-		Action ret = Action();
 		// This may be a performance bottleneck and we'll have to combine the two trees, but that would require us to tackle the typing more directly.
 		if(target.mSubModelNames && (subIndex = target.mSubModelNames->find(name)) && !(subModel = target.mSubModels->find(name))){
 			std::cout << "Switching file to " << name << std::endl;
 			ret = Action(SwitchFile, *subIndex);
 		} else if (subModel) {
 			std::cout << "Submodel " << name << " was present" << std::endl;
+			
+			
 		} else {
 			std::cout << "Fetching " << name << ", later" << std::endl;
 		}
+		if(ret.k != SwitchFile) mInvertNext.erase(&target);
 		return ret;
 	}
 	
 	template<typename ErrF>	Action ModelBuilder<ErrF>::handleTriangle(Model& target, const ColorRef &c, const Triangle &t){
+		if(indeterminate(target.mCertify)) target.mCertify = false;
 		return Action();
 	}
 	
 	template<typename ErrF>	Action ModelBuilder<ErrF>::handleQuad(Model& target, const ColorRef &c, const Quad &q){
+		if(indeterminate(target.mCertify)) target.mCertify = false;
 		return Action();
 	}
 	
@@ -77,23 +179,37 @@ namespace LDParse {
 	}
 	
 	
+	// These two routines have nothing to do but enforce Certification rules w.r.t. "operational command lines" - http://www.ldraw.org/article/415.html
+	template<typename ErrF>	Action ModelBuilder<ErrF>::handleLine(Model& target, const ColorRef &, const Line &){
+		if(indeterminate(target.mCertify)) target.mCertify = false;
+		return Action();
+	}
+	
+	template<typename ErrF>	Action ModelBuilder<ErrF>::handleOptLine(Model& target, const ColorRef &, const OptLine &){
+		if(indeterminate(target.mCertify)) target.mCertify = false;
+		return Action();
+	}
+	
+	
 	template<typename ErrF>	ModelBuilder<ErrF>::ModelBuilder(ErrF &errF)
 	: mErr(errF),
 	mpdCallback(this, &ModelBuilder::handleMPDCommand),
 	metaCallback(this, &ModelBuilder::handleMetaCommand),
 	inclCallback(this, &ModelBuilder::handleInclude),
+	lineCallback(this, &ModelBuilder::handleLine),
 	triCallback(this, &ModelBuilder::handleTriangle),
 	quadCallback(this, &ModelBuilder::handleQuad),
+	optLineCallback(this, &ModelBuilder::handleOptLine),
 	eofCallback(this, &ModelBuilder::handleEOF),
 	mParser(mpdCallback,
 			metaCallback,
 			inclCallback,
-			LDParse::DummyImpl::dummyLine,
+			lineCallback,
 			triCallback,
 			quadCallback,
-			LDParse::DummyImpl::dummyOpt,
+			optLineCallback,
 			eofCallback,
-			mErr) {}
+			mErr) { mWindings.clear(); mInvertNext.clear(); }
 	
 	template<typename ErrF>	Model* ModelBuilder<ErrF>::construct(std::string srcLoc, std::string modelName, std::istream &fileContents, ColorTable& colorTable, SrcType srcType){
 		Model* ret = nullptr;

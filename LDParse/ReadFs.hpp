@@ -14,6 +14,21 @@
 
 namespace LDParse {
 
+	template<typename ErrF> bool readKeyword(TokenStream::const_iterator &tokenIt, const TokenKind &keyword, const FailF<ErrF> &fail){
+		const TokenStream::const_iterator start = tokenIt;
+		bool ret = (tokenIt++)->k == keyword;
+		if(!ret){
+			std::string options("");
+			auto it_range = Lexer<ErrF>::keywordRevMap.equal_range(keyword);
+			for(auto it = it_range.first; it != it_range.second; ++it){
+				if(options.size()) options += ", ";
+				options += it->second;
+			}
+			fail(start->textRepr() + ", not in: {" + options + "}");
+		}
+		return ret;
+	}
+	
 	template<typename ErrF> bool readColor(TokenStream::const_iterator &tokenIt, ColorRef &color, const FailF<ErrF> &fail) {
 		bool ret = true;
 		switch(tokenIt->k){

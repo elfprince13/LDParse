@@ -43,11 +43,17 @@ namespace LDParse {
 		Action handleInclude(Model& target, const ColorRef &c, const TransMatrix &t, const std::string &name);
 		CallbackMethod<Action, const ColorRef &, const TransMatrix &, const std::string &> inclCallback;
 		
+		Action handleLine(Model& target, const ColorRef &, const Line &);
+		CallbackMethod<Action, const ColorRef &, const Line &> lineCallback;
+		
 		Action handleTriangle(Model& target, const ColorRef &c, const Triangle &t);
 		CallbackMethod<Action, const ColorRef &, const Triangle &> triCallback;
 		
 		Action handleQuad(Model& target, const ColorRef &c, const Quad &q);
 		CallbackMethod<Action, const ColorRef &, const Quad &> quadCallback;
+		
+		Action handleOptLine(Model& target, const ColorRef &, const OptLine &);
+		CallbackMethod<Action, const ColorRef &, const OptLine &> optLineCallback;
 		
 		void handleEOF(Model& target);
 		CallbackMethod<void> eofCallback;
@@ -60,13 +66,19 @@ namespace LDParse {
 			triCallback.retarget(model);
 			quadCallback.retarget(model);
 			if(root){
+				mWindings.clear();
+				mInvertNext.clear();
 				mpdCallback.retarget(model);
 				eofCallback.retarget(model);
 			}
 		}
 		
+		std::unordered_map<const Model*, Winding> mWindings;
+		std::unordered_set<const Model*> mInvertNext;
+		std::unordered_set<const Model*> mClipping;
+		
 		typedef Parser<decltype(mpdCallback), decltype(metaCallback), decltype(inclCallback),
-		LineF, decltype(triCallback), decltype(quadCallback), OptF,
+		decltype(lineCallback), decltype(triCallback), decltype(quadCallback), decltype(optLineCallback),
 		decltype(eofCallback), ErrF > ModelParser;
 		ModelParser mParser;
 	public:

@@ -13,6 +13,6 @@ namespace LDParse {
 	: mName(name), mSrcLoc(srcLoc), mSrcType(srcType),
 	mSubModelNames(subModelNames), mSubModels((subModels == nullptr) ? std::shared_ptr<CacheType>((mSrcType == MPDRootT) ? CacheType::makeRoot() : nullptr) : subModels),
 	mColorTable(colorTable), mCertify(boost::logic::indeterminate), mWinding(BFCOff)
-	{ mStepEnds.clear(); }
+	{ mStepEnds.clear(); mLocalColors.clear(); mLocalComplements.clear(); }
 
 }
