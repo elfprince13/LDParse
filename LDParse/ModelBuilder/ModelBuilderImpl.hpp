@@ -248,12 +248,12 @@ namespace LDParse {
 			delete ret;
 			ret = nullptr;
 		} else {
-			if(ret->mSubModels){
+			/*if(ret->mSubModels){
 				(ret->mSubModels)->dump();
 				for(auto it = models.begin() + 1; it < models.end(); ++it){
 					std::cout << "Find? " << ((ret->mSubModels)->find(it->first) != boost::none) << std::endl;
 				}
-			}
+			}*/
 		}
 		
 		recordTo(nullptr);

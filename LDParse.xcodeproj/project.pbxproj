@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E91838721C508686000C25FB /* Manager.hpp in Headers */ = {isa = PBXBuildFile; fileRef = E91838701C508686000C25FB /* Manager.hpp */; };
+		E91838731C50874B000C25FB /* Manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E918386F1C508686000C25FB /* Manager.cpp */; };
 		E978EB611C4EF1EF00509462 /* Color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E978EB5F1C4EF1EF00509462 /* Color.cpp */; };
 		E978EB621C4EF1EF00509462 /* Color.hpp in Headers */ = {isa = PBXBuildFile; fileRef = E978EB601C4EF1EF00509462 /* Color.hpp */; };
 		E99D0D6A1C499F3F00278852 /* Geom.hpp in Headers */ = {isa = PBXBuildFile; fileRef = E99D0D681C499F3F00278852 /* Geom.hpp */; };
@@ -42,6 +44,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E91838641C508655000C25FB /* libLDManager.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libLDManager.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		E918386F1C508686000C25FB /* Manager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Manager.cpp; sourceTree = "<group>"; };
+		E91838701C508686000C25FB /* Manager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Manager.hpp; sourceTree = "<group>"; };
 		E978EB5F1C4EF1EF00509462 /* Color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Color.cpp; sourceTree = "<group>"; };
 		E978EB601C4EF1EF00509462 /* Color.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Color.hpp; sourceTree = "<group>"; };
 		E98347ED1C5013E700A77A1D /* ModelBuilder.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ModelBuilder.hpp; sourceTree = "<group>"; };
@@ -63,6 +68,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		E91838611C508655000C25FB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E9DD32031C46E06C00F2AE54 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -81,6 +93,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		E91838651C508655000C25FB /* LDManager */ = {
+			isa = PBXGroup;
+			children = (
+				E918386F1C508686000C25FB /* Manager.cpp */,
+				E91838701C508686000C25FB /* Manager.hpp */,
+			);
+			path = LDManager;
+			sourceTree = "<group>";
+		};
 		E98347EF1C50157900A77A1D /* ModelBuilder */ = {
 			isa = PBXGroup;
 			children = (
@@ -95,6 +116,7 @@
 			children = (
 				E9DD32081C46E06C00F2AE54 /* LDParse */,
 				E9DD321D1C4713EF00F2AE54 /* ParseTest */,
+				E91838651C508655000C25FB /* LDManager */,
 				E9DD32071C46E06C00F2AE54 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -104,6 +126,7 @@
 			children = (
 				E9DD32061C46E06C00F2AE54 /* libLDParse.a */,
 				E9DD321C1C4713EF00F2AE54 /* ParseTest */,
+				E91838641C508655000C25FB /* libLDManager.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -140,12 +163,20 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		E91838621C508655000C25FB /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E9DD32041C46E06C00F2AE54 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				E9DD32171C46E0A600F2AE54 /* Lex.hpp in Headers */,
 				E99D0D6A1C499F3F00278852 /* Geom.hpp in Headers */,
+				E91838721C508686000C25FB /* Manager.hpp in Headers */,
 				E978EB621C4EF1EF00509462 /* Color.hpp in Headers */,
 				E9DD320A1C46E06C00F2AE54 /* Parse.hpp in Headers */,
 			);
@@ -154,6 +185,23 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		E91838631C508655000C25FB /* LDManager */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E918386E1C508655000C25FB /* Build configuration list for PBXNativeTarget "LDManager" */;
+			buildPhases = (
+				E91838601C508655000C25FB /* Sources */,
+				E91838611C508655000C25FB /* Frameworks */,
+				E91838621C508655000C25FB /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LDManager;
+			productName = LDManager;
+			productReference = E91838641C508655000C25FB /* libLDManager.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 		E9DD32051C46E06C00F2AE54 /* LDParse */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = E9DD32111C46E06C00F2AE54 /* Build configuration list for PBXNativeTarget "LDParse" */;
@@ -198,6 +246,9 @@
 				LastUpgradeCheck = 0720;
 				ORGANIZATIONNAME = "StickFigure Graphic Productions";
 				TargetAttributes = {
+					E91838631C508655000C25FB = {
+						CreatedOnToolsVersion = 7.2;
+					};
 					E9DD32051C46E06C00F2AE54 = {
 						CreatedOnToolsVersion = 7.2;
 					};
@@ -220,11 +271,20 @@
 			targets = (
 				E9DD32051C46E06C00F2AE54 /* LDParse */,
 				E9DD321B1C4713EF00F2AE54 /* ParseTest */,
+				E91838631C508655000C25FB /* LDManager */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		E91838601C508655000C25FB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E91838731C50874B000C25FB /* Manager.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E9DD32021C46E06C00F2AE54 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -255,6 +315,26 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		E918386C1C508655000C25FB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				GCC_ENABLE_CPP_RTTI = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		E918386D1C508655000C25FB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				GCC_ENABLE_CPP_RTTI = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		E9DD320F1C46E06C00F2AE54 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -391,6 +471,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		E918386E1C508655000C25FB /* Build configuration list for PBXNativeTarget "LDManager" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E918386C1C508655000C25FB /* Debug */,
+				E918386D1C508655000C25FB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		E9DD32011C46E06C00F2AE54 /* Build configuration list for PBXProject "LDParse" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
