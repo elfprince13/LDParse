@@ -9,7 +9,7 @@
 #ifndef ModelBuilderDefs_h
 #define ModelBuilderDefs_h
 
-#include "Model.hpp"
+#include <LDParse/Model.hpp>
 
 namespace LDParse {
 	template<typename ErrF> class ModelBuilder{

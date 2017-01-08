@@ -31,6 +31,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 file(GLOB_RECURSE LDPARSE_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/include/LDParse/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/LDParse/*.cpp)
 add_library(LDParse STATIC ${LDPARSE_SOURCE})
-#add_executable(parsetest ParseTest/main.cpp)
+add_executable(parsetest ParseTest/main.cpp)
 target_link_libraries(LDParse ${LIBIGL_LIBRARIES} ${LIBIGL_EXTRA_LIBRARIES})
-#target_link_libraries(parsetest LDParse)
+target_link_libraries(parsetest LDParse)

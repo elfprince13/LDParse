@@ -8,10 +8,10 @@
 
 #include <iostream>
 #include <fstream>
-#include "Lex.hpp"
-#include "Parse.hpp"
-#include "Model.hpp"
-#include "ModelBuilder.hpp"
+#include <LDParse/Lex.hpp>
+#include <LDParse/Parse.hpp>
+#include <LDParse/Model.hpp>
+#include <LDParse/ModelBuilder.hpp>
 
 void err(std::string msg, std::string tok, bool fatal) {
 	std::cerr << (fatal ? "Error: " : "Warning: ") << msg << " ( " << tok << " )" << std::endl;
