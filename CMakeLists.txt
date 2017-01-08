@@ -26,8 +26,10 @@ add_subdirectory("${LIBIGL_INCLUDE_DIR}/../shared/cmake" "libigl")
 include_directories(${LIBIGL_INCLUDE_DIRS})
 add_definitions(${LIBIGL_DEFINITIONS})
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-file(GLOB_RECURSE LDPARSE_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/LDParse/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/LDParse/*.cpp)
+
+file(GLOB_RECURSE LDPARSE_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/include/LDParse/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/LDParse/*.cpp)
 add_library(LDParse STATIC ${LDPARSE_SOURCE})
 #add_executable(parsetest ParseTest/main.cpp)
 target_link_libraries(LDParse ${LIBIGL_LIBRARIES} ${LIBIGL_EXTRA_LIBRARIES})

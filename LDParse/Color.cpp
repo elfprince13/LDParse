@@ -6,7 +6,7 @@
 //  Copyright © 2016 StickFigure Graphic Productions. All rights reserved.
 //
 
-#include "Color.hpp"
+#include <LDParse/Color.hpp>
 
 #include <limits>
 

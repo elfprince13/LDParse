@@ -6,7 +6,7 @@
 //  Copyright © 2016 StickFigure Graphic Productions. All rights reserved.
 //
 
-#include "Lex.hpp"
+#include <LDParse/Lex.hpp>
 
 namespace LDParse {
 	/*

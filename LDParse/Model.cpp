@@ -6,7 +6,7 @@
 //  Copyright © 2016 StickFigure Graphic Productions. All rights reserved.
 //
 
-#include "Model.hpp"
+#include <LDParse/Model.hpp>
 namespace LDParse {
 	Model::Model(std::string name, std::string srcLoc, SrcType srcType, ColorTable& colorTable,
 				 const std::shared_ptr<const IndexType> subModelNames, std::shared_ptr<CacheType> subModels)
