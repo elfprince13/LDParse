@@ -34,6 +34,10 @@ namespace LDParse {
 			}
 		};
 		
+		
+		
+		ErrF &mErr;
+		
 		Action handleMPDCommand(Model& target, boost::optional<const std::string&> file);
 		CallbackMethod<Action, boost::optional<const std::string&> > mpdCallback;
 		
@@ -57,8 +61,6 @@ namespace LDParse {
 		
 		void handleEOF(Model& target);
 		CallbackMethod<void> eofCallback;
-		
-		ErrF &mErr;
 		
 		template<bool root=false> void recordTo(Model * model){
 			metaCallback.retarget(model);

@@ -105,7 +105,7 @@ namespace LDParse {
 		static const std::unordered_multimap<TokenKind, std::string, std::hash<uint32_t> > keywordRevMap;
 		
 		
-		Lexer(std::istream &input, ErrFType errHandler) : mInput(input), mErrHandler(errHandler), mBOF(mInput.tellg()) {mInput >> std::noskipws;}
+		Lexer(std::istream &input, ErrFType errHandler) : mInput(input), mBOF(mInput.tellg()), mErrHandler(errHandler) {mInput >> std::noskipws;}
 		bool lexLine(TokenStream &line, LexState start = Lex);
 		bool lexModelBoundaries(ModelStream &models, std::string &root, bool rewind = true);
 		

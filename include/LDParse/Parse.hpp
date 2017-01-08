@@ -51,7 +51,18 @@ namespace LDParse{
 	{
 	private:
 		Winding winding;
+		
 		ErrHandler &mErr;
+		
+		MPDHandler &mMPD;
+		MetaHandler &mMeta;
+		IncludeHandler &mIncl;
+		LineHandler &mLine;
+		TriangleHandler &mTri;
+		QuadHandler &mQuad;
+		OptHandler &mOpt;
+		EOFHandler &mEOF;
+		
 	public:
 		template<typename Out> using ReadF = ReadF<Out, ErrHandler>;
 		typedef Parser<MPDHandler, MetaHandler, IncludeHandler, LineHandler, TriangleHandler, QuadHandler, OptHandler, EOFHandler, ErrHandler> SelfType;
@@ -88,16 +99,6 @@ namespace LDParse{
 		
 		typedef Expect<ReadF<TransMatrix>, TransMatrix, ExpectPosition::TokenCount + 9 * ExpectNumber::TokenCount, ExpectTokenStrings::strMAT, ErrHandler> ExpectMat;
 		ExpectMat expectMat;
-	private:
-		MPDHandler &mMPD;
-		MetaHandler &mMeta;
-		IncludeHandler &mIncl;
-		LineHandler &mLine;
-		TriangleHandler &mTri;
-		QuadHandler &mQuad;
-		OptHandler &mOpt;
-		EOFHandler &mEOF;
-		
 	public:
 		Parser(MPDHandler &mpd, MetaHandler &m, IncludeHandler &i, LineHandler &l, TriangleHandler &t, QuadHandler &q, OptHandler &o, EOFHandler &eof, ErrHandler &e)
 		:  winding(CCW), mErr(e),
