@@ -18,6 +18,7 @@
 #include <locale>
 
 #include <boost/variant.hpp>
+#include <boost/algorithm/string/trim.hpp>
 
 namespace LDParse {
 	
@@ -399,6 +400,7 @@ namespace LDParse {
 			ITail = 3,
 			NTail = 4
 		} LineState;
+		static std::locale lmbLocale;
 		if(!(mInput.tellg() == mBOF || rewind)){
 			mErrHandler("Lexing model boundaries, but not at beginning of file and not asked to rewind", "", false);
 		} else if (rewind) {
@@ -463,10 +465,12 @@ namespace LDParse {
 								state = ITail;
 						}
 						break;
-					case YTail:
-						if(fileName.length()) fileName += " ";
-						fileName += it->textRepr();
+					case YTail: {
+						fileName = lineT.substr(it->c);
+						boost::trim_right(fileName, lmbLocale);
+						it = lineContents.end() - 1; // ++ off the deep end.
 						break;
+					}
 					default:
 						mErrHandler("Loop invariant failed. Something is wrong,", it->textRepr(), false);
 				}

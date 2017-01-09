@@ -99,7 +99,16 @@ namespace LDParse{
 		
 		typedef Expect<ReadF<TransMatrix>, TransMatrix, ExpectPosition::TokenCount + 9 * ExpectNumber::TokenCount, ExpectTokenStrings::strMAT, ErrHandler> ExpectMat;
 		ExpectMat expectMat;
-	public:
+		
+		bool expectFileName(TokenStream::const_iterator &tokenIt, const TokenStream::const_iterator &eol,
+							std::string &o, const std::string &lineT){
+			static std::locale efnLocale;
+			o = lineT.substr(tokenIt->c);
+			boost::trim_right(o, efnLocale);
+			tokenIt = eol;
+			return true;
+		}
+		
 		Parser(MPDHandler &mpd, MetaHandler &m, IncludeHandler &i, LineHandler &l, TriangleHandler &t, QuadHandler &q, OptHandler &o, EOFHandler &eof, ErrHandler &e)
 		:  winding(CCW), mErr(e),
 		mMPD(mpd), mMeta(m), mIncl(i), mLine(l), mTri(t), mQuad(q), mOpt(o), mEOF(eof),
@@ -164,7 +173,7 @@ namespace LDParse{
 								ColorRef color; TransMatrix mat; std::string name;
 								if(ret &= expectColor(token, eol, color)
 								   && expectMat(token, eol, mat)
-								   && expectIdent(token, eol, name)
+								   && expectFileName(token, eol, name, lineT)
 								   && expectEOL(token, eol)) nextAction = mIncl(color, mat, name);
 								break;
 							}
