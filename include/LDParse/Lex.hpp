@@ -15,6 +15,7 @@
 #include <vector>
 #include <unordered_map>
 #include <limits>
+#include <locale>
 
 #include <boost/variant.hpp>
 
@@ -45,6 +46,7 @@ namespace LDParse {
 		TokenKind k;
 		TokenValue v;
 		size_t l;
+		size_t c;
 		const std::string textRepr(bool showPos = false) const;
 		friend std::ostream &operator<<(std::ostream &out, const Token &o);
 		
@@ -88,7 +90,6 @@ namespace LDParse {
 		std::istream& mInput;
 		const std::streampos mBOF;
 		size_t mLineNo;
-		size_t mColNo;
 		ErrFType mErrHandler;
 		
 		static const std::unordered_multimap<TokenKind, std::string, std::hash<uint32_t> > invertMap(const std::unordered_map<std::string, TokenKind> &src){
@@ -108,9 +109,9 @@ namespace LDParse {
 		static const std::unordered_multimap<TokenKind, std::string, std::hash<uint32_t> > keywordRevMap;
 		
 		
-		Lexer(std::istream &input, ErrFType errHandler, size_t lineNo = 0, size_t colNo = 0)
+		Lexer(std::istream &input, ErrFType errHandler)
 		: mInput(input), mBOF(mInput.tellg()),
-		mLineNo(lineNo), mColNo(colNo), mErrHandler(errHandler) {mInput >> std::noskipws;}
+		mLineNo(0), mErrHandler(errHandler) {mInput >> std::noskipws;}
 		
 		bool lexLine(std::string &lineT, TokenStream &line, LexState start = Lex);
 		bool lexModelBoundaries(ModelStream &models, std::string &root, bool rewind = true);
@@ -151,6 +152,19 @@ namespace LDParse {
 			return ret;
 		}
 		
+		std::istream& skipWSCounting(std::istream& is, size_t& colNo){
+			std::istream::sentry(is, true);
+			std::streambuf* sb = is.rdbuf();
+			const std::locale loc = sb->getloc();
+			char c;
+			while((c = sb->sgetc()) != EOF && isspace(c, loc)){
+				sb->sbumpc();
+				colNo++;
+			}
+			if(c == EOF) is.setstate(std::ios::eofbit);
+			return is;
+		}
+		
 		template<bool discard = false> std::istream& safeGetline(std::istream& is, size_t& n, std::string& t, bool needsInc = true)
 		{
 			t.clear();
@@ -163,7 +177,8 @@ namespace LDParse {
 			
 			std::istream::sentry se(is, true);
 			std::streambuf* sb = is.rdbuf();
-			n = needsInc ? ++mLineNo : mLineNo;
+			n = mLineNo;
+			if(needsInc) mLineNo += 1;
 			
 			for(;;) {
 				int c = sb->sbumpc();
@@ -210,25 +225,26 @@ namespace LDParse {
 		lineV.clear();
 		if(mInput.eof()){
 			cur.l = mLineNo;
+			cur.c = 0;
 			cur.k = T_EOF;
 			lineV.push_back(cur);
 			ret = false;
 		} else {
 			std::string tokText("");
 			size_t lineNo;
+			size_t colNo = 0;
 			safeGetline(mInput, lineNo, line);
 			std::istringstream lineStream(line);
 			const std::streampos BOL = lineStream.tellg();
+			lineStream >> std::noskipws;
 			while(!(lineStream.peek() == EOF || lineStream.eof())){
 				switch (state) {
 					case String:
 						char next;	lineStream.get(next);
 						switch(next){
 							case '"':
-								cur.k = Ident;
-								cur.v = tokText;
-								cur.l = lineNo;
-								lineStream >> std::skipws;
+								cur = {Ident, tokText, lineNo, colNo};
+								colNo += tokText.length() + 2;
 								lineV.push_back(cur);
 								break;
 							default:
@@ -247,14 +263,14 @@ namespace LDParse {
 							}
 						}
 						safeGetline(lineStream, lineNo, tokText, false);
-						cur.k = Garbage;
-						cur.v = tokText;
-						cur.l = lineNo ;
+						cur = {Garbage, tokText, lineNo, colNo};
+						colNo += tokText.length();
 						lineV.push_back(cur);
 						break;
 						
 					default:
 						const std::streampos posHere = lineStream.tellg();
+						skipWSCounting(lineStream, colNo);
 						lineStream >> tokText;
 						if(lineStream.fail()){
 							break; // We weren't EOL yet, but only whitespace was left.
@@ -266,7 +282,6 @@ namespace LDParse {
 									case '"':
 										lineStream.clear();
 										lineStream.seekg(posHere);
-										lineStream >> std::noskipws;
 										lineStream.ignore(1,'"');
 										if(lineStream.gcount() == 1) {
 											state = String;
@@ -364,6 +379,8 @@ namespace LDParse {
 							}
 							if(push){
 								cur.l = lineNo;
+								cur.c = colNo;
+								colNo += tokText.length();
 								lineV.push_back(cur);
 							}
 						}
