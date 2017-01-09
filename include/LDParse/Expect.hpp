@@ -70,7 +70,7 @@ namespace LDParse {
 		
 		bool operator()(const TokenStream::const_iterator &tokenIt,const TokenStream::const_iterator &compare) const{
 			bool ret = std::distance(tokenIt, compare) == 0;
-			if(!ret) failF(compare);
+			if(!ret) failF(tokenIt);
 			return ret;
 		}
 	};
