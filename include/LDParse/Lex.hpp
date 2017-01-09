@@ -44,6 +44,7 @@ namespace LDParse {
 	struct Token {
 		TokenKind k;
 		TokenValue v;
+		size_t l;
 		const std::string textRepr() const;
 		friend std::ostream &operator<<(std::ostream &out, const Token &o);
 		
@@ -79,13 +80,15 @@ namespace LDParse {
 	};
 	
 	typedef std::vector<Token> TokenStream;
-	typedef std::vector<TokenStream> LineStream;
+	typedef std::vector<std::pair<std::string, TokenStream> > LineStream;
 	typedef std::vector<std::pair<std::string, LineStream> > ModelStream;
 	
 	template<typename ErrFType> class Lexer {
 	private:
 		std::istream& mInput;
 		const std::streampos mBOF;
+		size_t mLineNo;
+		size_t mColNo;
 		ErrFType mErrHandler;
 		
 		static const std::unordered_multimap<TokenKind, std::string, std::hash<uint32_t> > invertMap(const std::unordered_map<std::string, TokenKind> &src){
@@ -105,8 +108,11 @@ namespace LDParse {
 		static const std::unordered_multimap<TokenKind, std::string, std::hash<uint32_t> > keywordRevMap;
 		
 		
-		Lexer(std::istream &input, ErrFType errHandler) : mInput(input), mBOF(mInput.tellg()), mErrHandler(errHandler) {mInput >> std::noskipws;}
-		bool lexLine(TokenStream &line, LexState start = Lex);
+		Lexer(std::istream &input, ErrFType errHandler, size_t lineNo = 0, size_t colNo = 0)
+		: mInput(input), mBOF(mInput.tellg()),
+		mLineNo(lineNo), mColNo(colNo), mErrHandler(errHandler) {mInput >> std::noskipws;}
+		
+		bool lexLine(std::string &lineT, TokenStream &line, LexState start = Lex);
 		bool lexModelBoundaries(ModelStream &models, std::string &root, bool rewind = true);
 		
 	private:
@@ -145,7 +151,7 @@ namespace LDParse {
 			return ret;
 		}
 		
-		template<bool discard = false> std::istream& safeGetline(std::istream& is, std::string& t)
+		template<bool discard = false> std::istream& safeGetline(std::istream& is, size_t& n, std::string& t, bool needsInc = true)
 		{
 			t.clear();
 			
@@ -157,6 +163,7 @@ namespace LDParse {
 			
 			std::istream::sentry se(is, true);
 			std::streambuf* sb = is.rdbuf();
+			n = needsInc ? ++mLineNo : mLineNo;
 			
 			for(;;) {
 				int c = sb->sbumpc();
@@ -196,19 +203,20 @@ namespace LDParse {
 	
 	
 	template<typename ErrFType>
-	bool Lexer<ErrFType>::lexLine(TokenStream &lineV, LexState start) {
+	bool Lexer<ErrFType>::lexLine(std::string &line, TokenStream &lineV, LexState start) {
 		LexState state = start;
 		bool ret = true;
 		Token cur;
 		lineV.clear();
 		if(mInput.eof()){
+			cur.l = mLineNo;
 			cur.k = T_EOF;
 			lineV.push_back(cur);
 			ret = false;
 		} else {
-			std::string line;
 			std::string tokText("");
-			safeGetline(mInput, line);
+			size_t lineNo;
+			safeGetline(mInput, lineNo, line);
 			std::istringstream lineStream(line);
 			const std::streampos BOL = lineStream.tellg();
 			while(!(lineStream.peek() == EOF || lineStream.eof())){
@@ -219,6 +227,7 @@ namespace LDParse {
 							case '"':
 								cur.k = Ident;
 								cur.v = tokText;
+								cur.l = lineNo;
 								lineStream >> std::skipws;
 								lineV.push_back(cur);
 								break;
@@ -237,9 +246,10 @@ namespace LDParse {
 								break;
 							}
 						}
-						safeGetline(lineStream, tokText);
-						cur.v = tokText;
+						safeGetline(lineStream, lineNo, tokText, false);
 						cur.k = Garbage;
+						cur.v = tokText;
+						cur.l = lineNo ;
 						lineV.push_back(cur);
 						break;
 						
@@ -353,6 +363,7 @@ namespace LDParse {
 								}
 							}
 							if(push){
+								cur.l = lineNo;
 								lineV.push_back(cur);
 							}
 						}
@@ -384,6 +395,7 @@ namespace LDParse {
 		std::string fileName(root);
 		bool inFile = true;
 		size_t fileCt = 0;
+		std::string lineT("");
 		
 		auto storeFile = [&](bool cleanup = false){
 			models.push_back(std::make_pair(fileName, fileContents));
@@ -392,7 +404,7 @@ namespace LDParse {
 			fileContents.clear();
 		};
 		
-		while(lexLine(lineContents, inFile ? Lex : Discard)){
+		while(lexLine(lineT, lineContents, inFile ? Lex : Discard)){
 			LineState state = First;
 			for(auto it = lineContents.begin(); state < ITail && it != lineContents.end(); ++it){
 				switch(state){
@@ -443,7 +455,7 @@ namespace LDParse {
 				}
 			}
 			if(inFile || state == NTail){
-				fileContents.push_back(lineContents);
+				fileContents.push_back(std::make_pair(lineT,lineContents));
 			}
 			
 			if(fileContents.size() && !inFile){

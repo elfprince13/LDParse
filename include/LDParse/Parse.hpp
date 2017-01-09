@@ -130,7 +130,8 @@ namespace LDParse{
 				auto lineIt = modelIt->second.begin();
 				while(lineIt != modelIt->second.end() && ret){
 					Action nextAction = {NoAction, 0};
-					const TokenStream &line = *lineIt;
+					const std::string lineT = lineIt->first;
+					const TokenStream &line = lineIt->second;
 					if(line.size()){
 						auto token = line.begin();
 						const auto eol = line.end();
