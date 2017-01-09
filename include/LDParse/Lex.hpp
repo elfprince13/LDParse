@@ -161,11 +161,10 @@ namespace LDParse {
 			for(;;) {
 				int c = sb->sbumpc();
 				switch (c) {
-					case '\n':
-						return is;
 					case '\r':
 						if(sb->sgetc() == '\n')
 							sb->sbumpc();
+					case '\n':
 						return is;
 					case EOF:
 						// Also handle the case when the last line has no line ending
