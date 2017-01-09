@@ -16,7 +16,7 @@ namespace LDParse {
 	template<typename  ErrHandler> class FailF{
 	private:
 		void failed(const std::string &expect, const TokenStream::const_iterator &tokenIt, bool * expectSuccess = nullptr) const {
-			failed(expect, tokenIt->textRepr(), expectSuccess);
+			failed(expect, tokenIt->textRepr(true), expectSuccess);
 		}
 		void failed(const std::string &expect, const std::string &found, bool * expectSuccess = nullptr) const {
 			mErr("Expected " + expect, found, true);

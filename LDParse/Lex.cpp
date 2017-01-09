@@ -21,8 +21,11 @@ namespace LDParse {
 	
 	*/
 	
-	const std::string Token::textRepr() const {
+	const std::string Token::textRepr(bool showPos) const {
 		std::ostringstream out("");
+		if(showPos){
+			out << l << " : ";
+		}
 		switch(k){
 			case Zero...Five:
 			case DecInt:

@@ -45,7 +45,7 @@ namespace LDParse {
 		TokenKind k;
 		TokenValue v;
 		size_t l;
-		const std::string textRepr() const;
+		const std::string textRepr(bool showPos = false) const;
 		friend std::ostream &operator<<(std::ostream &out, const Token &o);
 		
 		
