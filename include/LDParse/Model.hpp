@@ -66,6 +66,9 @@ namespace LDParse{
 		
 	public:
 		Model(std::string name, std::string srcLoc, SrcType srcType, ColorTable& colorTable, const std::shared_ptr<const IndexType> subModelNames = nullptr, std::shared_ptr<CacheType> subModels = nullptr);
+		
+		std::shared_ptr<const CacheType> getSubFileCache() const { return mSubModels; }
+		const std::string& getPath() const { return mSrcLoc; }
 	};
 }
 
