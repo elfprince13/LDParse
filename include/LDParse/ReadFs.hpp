@@ -3,11 +3,10 @@
 //  LDParse
 //
 //  Created by Thomas Dickerson on 1/17/16.
-//  Copyright © 2016 StickFigure Graphic Productions. All rights reserved.
+//  Copyright © 2016 - 2020 StickFigure Graphic Productions. All rights reserved.
 //
 
-#ifndef ReadFs_h
-#define ReadFs_h
+#pragma once
 
 #include "Lex.hpp"
 #include "Expect.hpp"
@@ -19,7 +18,7 @@ namespace LDParse {
 		bool ret = (tokenIt++)->k == keyword;
 		if(!ret){
 			std::string options("");
-			auto it_range = Lexer<ErrF>::keywordRevMap.equal_range(keyword);
+			auto it_range = keywordRevMap().equal_range(keyword);
 			for(auto it = it_range.first; it != it_range.second; ++it){
 				if(options.size()) options += ", ";
 				options += it->second;
@@ -33,11 +32,11 @@ namespace LDParse {
 		bool ret = true;
 		switch(tokenIt->k){
 			case HexInt:
-				color = {false, boost::get<int32_t>((tokenIt++)->v)};
+				color = {false, std::get<int32_t>((tokenIt++)->v)};
 				break;
 			case Zero...Five:
 			case DecInt:
-				color = {true, boost::get<int32_t>((tokenIt++)->v)};
+				color = {true, std::get<int32_t>((tokenIt++)->v)};
 				break;
 			default:
 				fail(tokenIt, &ret);
@@ -51,10 +50,10 @@ namespace LDParse {
 			case HexInt:
 			case DecInt:
 			case Zero...Five:
-				num = boost::get<int32_t>((tokenIt++)->v);
+				num = std::get<int32_t>((tokenIt++)->v);
 				break;
 			case Float:
-				num = boost::get<float>((tokenIt++)->v);
+				num = std::get<float>((tokenIt++)->v);
 				break;
 			default:
 				fail(tokenIt, &ret);
@@ -66,7 +65,7 @@ namespace LDParse {
 		bool ret = true;
 		switch(tokenIt->k){
 			case Ident:
-				id = boost::get<std::string>((tokenIt++)->v);
+				id = std::get<std::string>((tokenIt++)->v);
 				break;
 			default:
 				fail(tokenIt, &ret);
@@ -141,5 +140,3 @@ namespace LDParse {
 	}
 	
 }
-
-#endif /* ReadFs_h */

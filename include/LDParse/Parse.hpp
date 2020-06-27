@@ -3,7 +3,7 @@
  *  LDParse
  *
  *  Created by Thomas Dickerson on 1/13/16.
- *  Copyright © 2016 StickFigure Graphic Productions. All rights reserved.
+ *  Copyright © 2016 - 2020 StickFigure Graphic Productions. All rights reserved.
  *
  */
 
@@ -269,12 +269,12 @@ namespace LDParse{
 	
 	namespace DummyImpl {
 		static MPDF dummyMPD = [](boost::optional<const std::string&>){ return Action(); };
-		static MetaF dummyMeta = [](TokenStream::const_iterator &tokenIt, const TokenStream::const_iterator &eolIt){ return Action(); };
-		static InclF dummyIncl = [](const ColorRef &c, const TransMatrix &t, const std::string &name){ return Action(); };
-		static LineF dummyLine = [](const ColorRef &c, const Line &l){ return Action(); };
-		static TriF dummyTri = [](const ColorRef &c, const Triangle &t){ return Action(); };
-		static QuadF dummyQuad = [](const ColorRef &c, const Quad &q){ return Action(); };
-		static OptF dummyOpt = [](const ColorRef &c, const OptLine &l){ return Action(); };
+		static MetaF dummyMeta = [](TokenStream::const_iterator &, const TokenStream::const_iterator &){ return Action(); };
+		static InclF dummyIncl = [](const ColorRef &, const TransMatrix &, const std::string &){ return Action(); };
+		static LineF dummyLine = [](const ColorRef &, const Line &){ return Action(); };
+		static TriF dummyTri = [](const ColorRef &, const Triangle &){ return Action(); };
+		static QuadF dummyQuad = [](const ColorRef &, const Quad &){ return Action(); };
+		static OptF dummyOpt = [](const ColorRef &, const OptLine &){ return Action(); };
 		static EOFF dummyEOF = [](){};
 	};
 	

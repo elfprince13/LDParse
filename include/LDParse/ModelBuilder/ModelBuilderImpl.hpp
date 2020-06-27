@@ -3,11 +3,10 @@
 //  LDParse
 //
 //  Created by Thomas Dickerson on 1/20/16.
-//  Copyright © 2016 StickFigure Graphic Productions. All rights reserved.
+//  Copyright © 2016 - 2020 StickFigure Graphic Productions. All rights reserved.
 //
 
-#ifndef ModelBuilderImpl_h
-#define ModelBuilderImpl_h
+#pragma once
 
 #include "ModelBuilderDefs.hpp"
 
@@ -127,7 +126,7 @@ namespace LDParse {
 						META_PARSE_ORIENTATION:
 						case Orientation:
 							if(target.mCertify){
-								mWindings[&target] = boost::get<Winding>(tokenIt->v);
+								mWindings[&target] = std::get<Winding>(tokenIt->v);
 								if(tokenIt != eolIt && (success &= tokenIt->k == Clip && leadingOrient))
 									goto META_PARSE_CLIP;
 							} break;
@@ -143,7 +142,8 @@ namespace LDParse {
 		return success ? Action() : Action(StopParsing, false);
 	}
 	
-	template<typename ErrF>	Action ModelBuilder<ErrF>::handleInclude(Model& target, const ColorRef &c, const TransMatrix &t, const std::string &name){
+	template<typename ErrF>
+	Action ModelBuilder<ErrF>::handleInclude(Model& target, const ColorRef &, const TransMatrix &, const std::string &name){
 		if(indeterminate(target.mCertify)) target.mCertify = false;
 		Action ret = Action();
 		boost::optional<const size_t&> subIndex;
@@ -163,12 +163,14 @@ namespace LDParse {
 		return ret;
 	}
 	
-	template<typename ErrF>	Action ModelBuilder<ErrF>::handleTriangle(Model& target, const ColorRef &c, const Triangle &t){
+	template<typename ErrF>
+	Action ModelBuilder<ErrF>::handleTriangle(Model& target, const ColorRef &, const Triangle &){
 		if(indeterminate(target.mCertify)) target.mCertify = false;
 		return Action();
 	}
 	
-	template<typename ErrF>	Action ModelBuilder<ErrF>::handleQuad(Model& target, const ColorRef &c, const Quad &q){
+	template<typename ErrF>
+	Action ModelBuilder<ErrF>::handleQuad(Model& target, const ColorRef &, const Quad &){
 		if(indeterminate(target.mCertify)) target.mCertify = false;
 		return Action();
 	}
@@ -261,6 +263,3 @@ namespace LDParse {
 		return ret;
 	}
 }
-
-
-#endif /* ModelBuilderImpl_h */

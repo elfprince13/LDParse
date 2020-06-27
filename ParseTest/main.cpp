@@ -3,7 +3,7 @@
 //  ParseTest
 //
 //  Created by Thomas Dickerson on 1/13/16.
-//  Copyright © 2016 StickFigure Graphic Productions. All rights reserved.
+//  Copyright © 2016 - 2020 StickFigure Graphic Productions. All rights reserved.
 //
 
 #include <iostream>

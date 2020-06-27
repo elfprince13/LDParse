@@ -3,26 +3,26 @@
 //  LDParse
 //
 //  Created by Thomas Dickerson on 1/13/16.
-//  Copyright © 2016 StickFigure Graphic Productions. All rights reserved.
+//  Copyright © 2016 - 2020 StickFigure Graphic Productions. All rights reserved.
 //
 
-#ifndef Lex_hpp
-#define Lex_hpp
+#pragma once
 
-#include <stddef.h>
+#include <cstddef>
 #include <iostream>
-#include <sstream>
-#include <vector>
-#include <unordered_map>
 #include <limits>
 #include <locale>
+#include <sstream>
+#include <string_view>
+#include <unordered_map>
+#include <variant>
+#include <vector>
 
-#include <boost/variant.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
 namespace LDParse {
 	
-	typedef enum : int32_t {
+	enum TokenKind : int32_t {
 		Zero = 0, One = 1, Two = 2, Three = 3, Four = 4, Five = 5,
 		Step, Pause, Write /*Print*/, Clear, Save,
 		Colour, Code, Value, Edge, Alpha, Luminance,
@@ -30,19 +30,20 @@ namespace LDParse {
 		File, NoFile,
 		BFC, Certify, NoCertify, Clip, NoClip, InvertNext, Orientation,
 		HexInt = -6, DecInt = -5, Float = -4, Ident = -3, Garbage = -2, T_EOF = -1
-	} TokenKind;
+	};
 	
-	typedef enum : bool {
+	enum Winding : bool {
 		CCW = false,
 		CW = true
-	} Winding;
-	
-	
+	};
+		
+		
 	struct Token;
 	
 	std::ostream &operator<<(std::ostream &out, const Token &o);
 	
-	typedef boost::variant<const char *, std::string, Winding, float, int32_t> TokenValue;
+	using TokenValue = std::variant<const char *, std::string, Winding, float, int32_t>;
+	
 	struct Token {
 		TokenKind k;
 		TokenValue v;
@@ -52,7 +53,7 @@ namespace LDParse {
 		friend std::ostream &operator<<(std::ostream &out, const Token &o);
 		
 		
-		inline bool isNumber(Token &t){
+		inline bool isNumber() const {
 			switch(k){
 				case Zero...Five:
 				case HexInt:
@@ -63,16 +64,17 @@ namespace LDParse {
 					return false;
 			}
 		}
-		inline float getNumber(Token &t){
+		
+		inline float getNumber() const {
 			float ret;
 			switch(k){
 				case Zero...Five:
 				case DecInt:
 				case HexInt:
-					ret = boost::get<int32_t>(v);
+					ret = std::get<int32_t>(v);
 					break;
 				case Float:
-					ret = boost::get<float>(v);
+					ret = std::get<float>(v);
 					break;
 				default:
 					ret = std::numeric_limits<float>::quiet_NaN();
@@ -82,32 +84,29 @@ namespace LDParse {
 		
 	};
 	
-	typedef std::vector<Token> TokenStream;
-	typedef std::vector<std::pair<std::string, TokenStream> > LineStream;
-	typedef std::vector<std::pair<std::string, LineStream> > ModelStream;
+	using TokenStream = std::vector<Token>;
+	using LineStream = std::vector<std::pair<std::string, TokenStream> >;
+	using ModelStream = std::vector<std::pair<std::string, LineStream> >;
 	
-	template<typename ErrFType> class Lexer {
-	private:
+	namespace detail {
+		std::unordered_multimap<TokenKind, std::string, std::hash<uint32_t> > invertMap(const std::unordered_map<std::string, TokenKind> &src);
+	}
+		
+	const std::unordered_map<std::string, TokenKind>& keywordMap();
+	const std::unordered_multimap<TokenKind, std::string, std::hash<uint32_t> >& keywordRevMap();
+		
+	template<typename ErrFType>
+	class Lexer {
 		std::istream& mInput;
 		const std::streampos mBOF;
 		size_t mLineNo;
 		ErrFType mErrHandler;
 		
-		static const std::unordered_multimap<TokenKind, std::string, std::hash<uint32_t> > invertMap(const std::unordered_map<std::string, TokenKind> &src){
-			std::unordered_multimap<TokenKind, std::string, std::hash<uint32_t> > dst;
-			for(auto it = src.begin(); it != src.end(); ++it){
-				dst.insert(std::make_pair(it->second, it->first));
-			}
-			return dst;
-		}
-		
 	public:
-		typedef enum {
+		enum LexState {
 			Lex, String, Discard
-		} LexState;
-		
-		static const std::unordered_map<std::string, TokenKind> keywordMap;
-		static const std::unordered_multimap<TokenKind, std::string, std::hash<uint32_t> > keywordRevMap;
+		};
+
 		
 		
 		Lexer(std::istream &input, ErrFType errHandler)
@@ -201,25 +200,10 @@ namespace LDParse {
 		}
 	};
 	
-	template<typename ErrFType>
-	const std::unordered_map<std::string, TokenKind> Lexer<ErrFType>::keywordMap = {
-		{"0", Zero}, {"1", One}, {"2", Two}, {"3", Three}, {"4", Four}, {"5",Five},
-		{"STEP", Step}, {"PAUSE", Pause}, {"WRITE", Write}, {"PRINT", Write}, {"CLEAR", Clear}, {"SAVE", Save},
-		{"!COLOUR", Colour}, {"CODE", Code}, {"VALUE", Value}, {"EDGE", Edge}, {"ALPHA", Alpha}, {"LUMINANCE", Luminance},
-		{"CHROME", Chrome}, {"PEARLESCENT", Pearlescent}, {"RUBBER", Rubber}, {"MATTE_METALLIC", MatteMetallic}, {"METAL", Metal}, {"MATERIAL", Material},
-		{"FILE", File}, {"NOFILE", NoFile},
-		{"BFC", BFC}, {"CERTIFY", Certify}, {"NOCERTIFY", NoCertify}, {"CLIP", Clip}, {"NOCLIP", NoClip},
-		{"CW", Orientation}, {"CCW", Orientation}, {"INVERTNEXT", InvertNext}
-	};
-	
-	template<typename ErrFType>
-	const std::unordered_multimap<TokenKind, std::string, std::hash<uint32_t> > Lexer<ErrFType>::keywordRevMap = invertMap(Lexer<ErrFType>::keywordMap);
-	
-	static std::string AllowedSpecialChars = "._,-~/\\#:()[]";
-	
 	
 	template<typename ErrFType>
 	bool Lexer<ErrFType>::lexLine(std::string &line, TokenStream &lineV, LexState start) {
+		constexpr static const std::string_view AllowedSpecialChars("._,-~/\\#:()[]");
 		LexState state = start;
 		bool ret = true;
 		Token cur;
@@ -277,8 +261,8 @@ namespace LDParse {
 							break; // We weren't EOL yet, but only whitespace was left.
 						} else {
 							bool push = true;
-							auto kindIt = keywordMap.find(tokText);
-							if(kindIt == keywordMap.end()) {
+							auto kindIt = keywordMap().find(tokText);
+							if(kindIt == keywordMap().end()) {
 								switch(tokText[0]) {
 									case '"':
 										lineStream.clear();
@@ -495,5 +479,3 @@ namespace LDParse {
 	
 	typedef Lexer<ErrF> CallbackLexer;
 }
-
-#endif /* Lex_hpp */

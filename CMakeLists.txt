@@ -4,10 +4,11 @@ cmake_policy(SET CMP0015 NEW)
 
 foreach(lang C CXX)
 	set(CMAKE_${lang}_STANDARD_REQUIRED ON)
-	set(CMAKE_${lang}_STANDARD 11)
 	set(CMAKE_${lang}_EXTENSIONS OFF)
 endforeach(lang)
-add_definitions(-Wall) # This is a hack, but it should work consistently
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+add_compile_options(-Wall -Wextra) 
 
 
 project(LDParse)
@@ -17,17 +18,18 @@ list(APPEND CMAKE_MODULE_PATH "${LDPARSE_DEPS_DIRECTORY}")
 find_package(Boost 1.59 REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
-find_package(LIBIGL)
-
-option(LIBIGL_USE_STATIC_LIBRARY "Use LibIGL as static library" OFF)
-option(LIBIGL_WITH_EMBREE "Use Embree" ON)
-
-add_subdirectory("${LIBIGL_INCLUDE_DIR}/../shared/cmake" "libigl")
-include_directories(${LIBIGL_INCLUDE_DIRS})
-add_definitions(${LIBIGL_DEFINITIONS})
+#find_package(LIBIGL)
+#
+#option(LIBIGL_USE_STATIC_LIBRARY "Use LibIGL as static library" OFF)
+#option(LIBIGL_WITH_EMBREE "Use Embree" ON)
+#
+#add_subdirectory("${LIBIGL_INCLUDE_DIR}/../shared/cmake" "libigl")
+#include_directories(${LIBIGL_INCLUDE_DIRS})
+#add_definitions(${LIBIGL_DEFINITIONS})
+#
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-set(LDPARSE_INCLUDE_DIR ${Boost_INCLUDE_DIRS} ${LIBIGL_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)
+#set(LDPARSE_INCLUDE_DIR ${Boost_INCLUDE_DIRS} #[[${LIBIGL_INCLUDE_DIRS}]] ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)
 
 
 file(GLOB_RECURSE LDPARSE_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/include/LDParse/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/LDParse/*.cpp)

@@ -3,7 +3,7 @@
 //  LDParse
 //
 //  Created by Thomas Dickerson on 1/15/16.
-//  Copyright © 2016 StickFigure Graphic Productions. All rights reserved.
+//  Copyright © 2016 - 2020 StickFigure Graphic Productions. All rights reserved.
 //
 
 #ifndef Geom_hpp
@@ -73,7 +73,7 @@ namespace LDParse{
 		
 	private:
 		template<std::size_t> struct int_{};
-		template<size_t N = std::tuple_size<AttrsType>::value> void mergeHelper(const SelfType &merge, std::tuple<void(AttrTypes&) ...> txformFs, int_<N> elemCt = int_<N>()){
+		template<size_t N = std::tuple_size<AttrsType>::value> void mergeHelper(const SelfType &merge, std::tuple<void(AttrTypes&) ...> txformFs, int_<N> = int_<N>()){
 			constexpr size_t i = std::tuple_size<AttrsType>::value - N;
 			AttrType<i> &thisAttr = std::get<i>(attributes);
 			const AttrType<i> &mergeAttr = std::get<i>(merge.attributes);
@@ -82,7 +82,8 @@ namespace LDParse{
 			
 			mergeHelper(merge, txformFs, int_<N-1>());
 		}
-		void mergeHelper(const SelfType &merge, std::tuple<void(AttrTypes&) ...> txformFs, int_<0>){}
+		
+		void mergeHelper(const SelfType &, std::tuple<void(AttrTypes&) ...>, int_<0>){}
 		
 		template<typename T> void appendVector(std::vector<T> &l, const std::vector<T> &r, void(*txformF)(T&)){
 			size_t begin = l.size();
