@@ -44,6 +44,10 @@ namespace LDParse {
 		std::string name;
 		uint16_t code;
 		std::variant<uint16_t, ColorData> edge;
+		using ColorData::color;
+		using ColorData::alpha;
+		using ColorData::luminance;
+		using ColorData::finish;
 		
 	};
 	

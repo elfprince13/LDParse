@@ -1,3 +1,6 @@
 [submodule "deps/immer"]
 	path = deps/immer
 	url = git@github.com:arximboldi/immer.git
+[submodule "deps/CxxBidirectionalCoroutines"]
+	path = deps/CxxBidirectionalCoroutines
+	url = git@github.com:Geopipe/CxxBidirectionalCoroutines.git

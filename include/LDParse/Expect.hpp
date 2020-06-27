@@ -13,7 +13,8 @@
 
 namespace LDParse {
 	
-	template<typename  ErrHandler> class FailF{
+	template<typename  ErrHandler>
+	class FailF{
 		void failed(const std::string &expect, const TokenStream::const_iterator &tokenIt, bool * expectSuccess = nullptr) const {
 			failed(expect, tokenIt->textRepr(true), expectSuccess);
 		}
@@ -61,7 +62,8 @@ namespace LDParse {
 		}
 	};
 	
-	template<const char* tokenName, typename ErrHandler> class Expect<void, TokenStream::const_iterator, 0, tokenName, ErrHandler> {
+	template<const char* tokenName, typename ErrHandler>
+	class Expect<void, TokenStream::const_iterator, 0, tokenName, ErrHandler> {
 	private:
 		ErrHandler &mErr;
 		const FailF<ErrHandler> failF;

@@ -46,29 +46,13 @@ namespace LDParse{
 		constexpr static const char strKW[] = "specific keyword";
 		
 	}
-		
-	template<	typename MPDHandler, typename MetaHandler, typename IncludeHandler,
-				typename LineHandler, typename TriangleHandler, typename QuadHandler,
-				typename OptHandler, typename EOFHandler, typename ErrHandler>
-	class Parser {
-		Winding winding;
-		
+	
+	template<typename ErrHandler>
+	class ParserBase {
 		ErrHandler &mErr;
-		
-		MPDHandler &mMPD;
-		MetaHandler &mMeta;
-		IncludeHandler &mIncl;
-		LineHandler &mLine;
-		TriangleHandler &mTri;
-		QuadHandler &mQuad;
-		OptHandler &mOpt;
-		EOFHandler &mEOF;
-		
 	public:
 		template<typename Out>
 		using ReadF = ReadF<Out, ErrHandler>;
-		
-		using SelfType = Parser<MPDHandler, MetaHandler, IncludeHandler, LineHandler, TriangleHandler, QuadHandler, OptHandler, EOFHandler, ErrHandler>;
 		
 		using ExpectKeyword = Expect<ReadF<const TokenKind>, const TokenKind, 1, ExpectTokenStrings::strKW, ErrHandler>;
 		ExpectKeyword expectKeyword;
@@ -112,9 +96,8 @@ namespace LDParse{
 			return true;
 		}
 		
-		Parser(MPDHandler &mpd, MetaHandler &m, IncludeHandler &i, LineHandler &l, TriangleHandler &t, QuadHandler &q, OptHandler &o, EOFHandler &eof, ErrHandler &e)
-		:  winding(CCW), mErr(e),
-		mMPD(mpd), mMeta(m), mIncl(i), mLine(l), mTri(t), mQuad(q), mOpt(o), mEOF(eof),
+		ParserBase(ErrHandler &e)
+		: mErr(e),
 		expectKeyword(mErr, readKeyword),
 		expectEOL(mErr),
 		expectColor(mErr, readColor),
@@ -125,8 +108,44 @@ namespace LDParse{
 		expectTriangle(mErr, readTriangle),
 		expectQuad(mErr, readQuad),
 		expectOptLine(mErr, readOptLine),
-		expectMat(mErr, readMat)
-		{}
+		expectMat(mErr, readMat) {}
+	};
+		
+	template<	typename MPDHandler, typename MetaHandler, typename IncludeHandler,
+				typename LineHandler, typename TriangleHandler, typename QuadHandler,
+				typename OptHandler, typename EOFHandler, typename ErrHandler>
+	class Parser : public ParserBase<ErrHandler> {
+		Winding winding;
+		MPDHandler &mMPD;
+		MetaHandler &mMeta;
+		IncludeHandler &mIncl;
+		LineHandler &mLine;
+		TriangleHandler &mTri;
+		QuadHandler &mQuad;
+		OptHandler &mOpt;
+		EOFHandler &mEOF;
+		
+	public:
+		using SelfType = Parser<MPDHandler, MetaHandler, IncludeHandler, LineHandler, TriangleHandler, QuadHandler, OptHandler, EOFHandler, ErrHandler>;
+		using SuperType = ParserBase<ErrHandler>;
+		
+		using SuperType::mErr;
+		using SuperType::expectKeyword;
+		using SuperType::expectEOL;
+		using SuperType::expectColor;
+		using SuperType::expectNumber;
+		using SuperType::expectIdent;
+		using SuperType::expectPosition;
+		using SuperType::expectLine;
+		using SuperType::expectTriangle;
+		using SuperType::expectQuad;
+		using SuperType::expectOptLine;
+		using SuperType::expectMat;
+		using SuperType::expectFileName;
+		
+		Parser(MPDHandler &mpd, MetaHandler &m, IncludeHandler &i, LineHandler &l, TriangleHandler &t, QuadHandler &q, OptHandler &o, EOFHandler &eof, ErrHandler &e)
+		:  SuperType(e), winding(CCW),
+		mMPD(mpd), mMeta(m), mIncl(i), mLine(l), mTri(t), mQuad(q), mOpt(o), mEOF(eof) {}
 		
 		bool parseModels(const ModelStream &models, bool strict = false){
 			bool ret = true;

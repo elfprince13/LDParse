@@ -26,6 +26,7 @@ namespace LDParse {
 		Zero = 0, One = 1, Two = 2, Three = 3, Four = 4, Five = 5,
 		Step, Pause, Write /*Print*/, Clear, Save,
 		Colour, Code, Value, Edge, Alpha, Luminance,
+		// Finishes are assumed to be consecutive, between Chrome and Material
 		Chrome, Pearlescent, Rubber, MatteMetallic, Metal, Material,
 		File, NoFile,
 		BFC, Certify, NoCertify, Clip, NoClip, InvertNext, Orientation,

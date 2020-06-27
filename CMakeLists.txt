@@ -15,26 +15,17 @@ project(LDParse)
 set(LDPARSE_DEPS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/deps")
 list(APPEND CMAKE_MODULE_PATH "${LDPARSE_DEPS_DIRECTORY}")
 
-find_package(Boost 1.59 REQUIRED)
+find_package(Boost 1.67 REQUIRED COMPONENTS context)
 include_directories(${Boost_INCLUDE_DIRS})
 
-#find_package(LIBIGL)
-#
-#option(LIBIGL_USE_STATIC_LIBRARY "Use LibIGL as static library" OFF)
-#option(LIBIGL_WITH_EMBREE "Use Embree" ON)
-#
-#add_subdirectory("${LIBIGL_INCLUDE_DIR}/../shared/cmake" "libigl")
-#include_directories(${LIBIGL_INCLUDE_DIRS})
-#add_definitions(${LIBIGL_DEFINITIONS})
-#
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/deps/immer)
-#set(LDPARSE_INCLUDE_DIR ${Boost_INCLUDE_DIRS} #[[${LIBIGL_INCLUDE_DIRS}]] ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)
+include_directories(
+	${CMAKE_CURRENT_SOURCE_DIR}/include
+	${CMAKE_CURRENT_SOURCE_DIR}/deps/immer 
+	${CMAKE_CURRENT_SOURCE_DIR}/deps/CxxBidirectionalCoroutines/include)
 
 
 file(GLOB_RECURSE LDPARSE_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/include/LDParse/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/LDParse/*.cpp)
 add_library(LDParse SHARED ${LDPARSE_SOURCE})
-#target_link_libraries(LDParse ${LIBIGL_LIBRARIES} ${LIBIGL_EXTRA_LIBRARIES})
 
 add_subdirectory(face-unwrapper)
 add_subdirectory(parsetest)
