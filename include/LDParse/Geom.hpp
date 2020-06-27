@@ -31,8 +31,8 @@ namespace LDParse{
 	
 	template<typename ...AttrTypes> class Mesh {
 	public:
-		typedef Mesh<AttrTypes...> SelfType;
-		typedef std::tuple<std::vector<AttrTypes> ...> AttrsType;
+		using SelfType = Mesh<AttrTypes...>;
+		using AttrsType = std::tuple<std::vector<AttrTypes> ...>;
 		template<size_t i> using AttrType = typename std::tuple_element<i, AttrsType>::type;
 		AttrsType attributes;
 		std::vector<uint32_t> indices;
