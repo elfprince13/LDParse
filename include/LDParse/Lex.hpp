@@ -377,13 +377,13 @@ namespace LDParse {
 	
 	template<typename ErrFType>
 	bool Lexer<ErrFType>::lexModelBoundaries(ModelStream &models, std::string &root, bool rewind){
-		typedef enum : uint8_t {
+		enum LineState : uint8_t {
 			First = 0,
 			Second = 1,
 			YTail = 2,
 			ITail = 3,
 			NTail = 4
-		} LineState;
+		};
 		static std::locale lmbLocale;
 		if(!(mInput.tellg() == mBOF || rewind)){
 			mErrHandler("Lexing model boundaries, but not at beginning of file and not asked to rewind", "", false);
@@ -475,7 +475,7 @@ namespace LDParse {
 		return fileCt;
 	}
 	
-	typedef void (*ErrF)(std::string msg, std::string tokText, bool fatal);
+	using ErrF = void (*)(std::string msg, std::string tokText, bool fatal);
 	
-	typedef Lexer<ErrF> CallbackLexer;
+	using CallbackLexer = Lexer<ErrF>;
 }

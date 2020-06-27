@@ -17,16 +17,16 @@
 
 namespace LDParse{
 	
-	typedef std::pair<bool, uint32_t> ColorRef;
-	typedef std::tuple<float, float, float> Position;
-	typedef std::tuple<Position, Position, Position> Line;
-	typedef std::tuple<Position, Position, Position> Triangle;
-	typedef std::tuple<Position, Position, Position, Position> Quad;
-	typedef std::tuple<Line, Line> OptLine;
-	typedef std::tuple<Position,
+	using ColorRef = std::pair<bool, uint32_t>;
+	using Position = std::tuple<float, float, float>;
+	using Line = std::tuple<Position, Position, Position>;
+	using Triangle = std::tuple<Position, Position, Position>;
+	using Quad = std::tuple<Position, Position, Position, Position>;
+	using OptLine = std::tuple<Line, Line>;
+	using TransMatrix = std::tuple<Position,
 	float, float, float,
 	float, float, float,
-	float, float, float> TransMatrix;
+	float, float, float>;
 	
 	
 	template<typename ...AttrTypes> class Mesh {

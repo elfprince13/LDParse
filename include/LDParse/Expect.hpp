@@ -14,7 +14,6 @@
 namespace LDParse {
 	
 	template<typename  ErrHandler> class FailF{
-	private:
 		void failed(const std::string &expect, const TokenStream::const_iterator &tokenIt, bool * expectSuccess = nullptr) const {
 			failed(expect, tokenIt->textRepr(true), expectSuccess);
 		}
@@ -37,16 +36,17 @@ namespace LDParse {
 		}
 	};
 	
-	template<typename Out, typename ErrHandler> using ReadF = bool (*)(TokenStream::const_iterator &tokenIt, Out &o, const FailF<ErrHandler> &fail);
+	template<typename Out, typename ErrHandler>
+	using ReadF = bool (*)(TokenStream::const_iterator &tokenIt, Out &o, const FailF<ErrHandler> &fail);
 	
-	template<typename ReadF, typename Out, size_t tokenLen, const char * tokenName, typename ErrHandler> class Expect{
-	private:
+	template<typename ReadF, typename Out, size_t tokenLen, const char * tokenName, typename ErrHandler>
+	class Expect{
 		ReadF mRead;
 		ErrHandler &mErr;
 		const FailF<ErrHandler> failF;
 	public:
 		constexpr static const size_t TokenCount = tokenLen;
-		typedef Expect<ReadF, Out, tokenLen, tokenName, ErrHandler> SelfType;
+		using SelfType = Expect<ReadF, Out, tokenLen, tokenName, ErrHandler>;
 
 		Expect(ErrHandler &err, ReadF read) : mRead(read), mErr(err), failF(mErr, tokenName) {}
 		

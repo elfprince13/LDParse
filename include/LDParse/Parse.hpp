@@ -6,24 +6,24 @@
  *  Copyright © 2016 - 2020 StickFigure Graphic Productions. All rights reserved.
  *
  */
-
-#ifndef Parse_hpp
-#define Parse_hpp
+#pragma once
 
 #include "Lex.hpp"
 #include "Geom.hpp"
 #include "ReadFs.hpp"
 #include "Expect.hpp"
-#include <boost/optional.hpp>
+
+#include <functional>
+#include <optional>
 
 namespace LDParse{
 	
-	typedef enum {
+	enum ActionKind {
 		SwitchFile,
 		SkipNLines,
 		NoAction,
 		StopParsing
-	} ActionKind;
+	};
 	
 	struct Action {
 		ActionKind k;
@@ -47,9 +47,10 @@ namespace LDParse{
 		
 	}
 		
-	template<typename MPDHandler, typename MetaHandler, typename IncludeHandler, typename LineHandler, typename TriangleHandler, typename QuadHandler, typename OptHandler, typename EOFHandler, typename ErrHandler> class Parser
-	{
-	private:
+	template<	typename MPDHandler, typename MetaHandler, typename IncludeHandler,
+				typename LineHandler, typename TriangleHandler, typename QuadHandler,
+				typename OptHandler, typename EOFHandler, typename ErrHandler>
+	class Parser {
 		Winding winding;
 		
 		ErrHandler &mErr;
@@ -64,40 +65,42 @@ namespace LDParse{
 		EOFHandler &mEOF;
 		
 	public:
-		template<typename Out> using ReadF = ReadF<Out, ErrHandler>;
-		typedef Parser<MPDHandler, MetaHandler, IncludeHandler, LineHandler, TriangleHandler, QuadHandler, OptHandler, EOFHandler, ErrHandler> SelfType;
+		template<typename Out>
+		using ReadF = ReadF<Out, ErrHandler>;
 		
-		typedef Expect<ReadF<const TokenKind>, const TokenKind, 1, ExpectTokenStrings::strKW, ErrHandler> ExpectKeyword;
+		using SelfType = Parser<MPDHandler, MetaHandler, IncludeHandler, LineHandler, TriangleHandler, QuadHandler, OptHandler, EOFHandler, ErrHandler>;
+		
+		using ExpectKeyword = Expect<ReadF<const TokenKind>, const TokenKind, 1, ExpectTokenStrings::strKW, ErrHandler>;
 		ExpectKeyword expectKeyword;
 		
-		typedef Expect<void, TokenStream::const_iterator, 0, ExpectTokenStrings::strEOL, ErrHandler> ExpectEOL;
+		using ExpectEOL = Expect<void, TokenStream::const_iterator, 0, ExpectTokenStrings::strEOL, ErrHandler>;
 		ExpectEOL expectEOL;
 		
-		typedef Expect<ReadF<ColorRef>, ColorRef, 1, ExpectTokenStrings::strCOL, ErrHandler> ExpectColor;
+		using ExpectColor = Expect<ReadF<ColorRef>, ColorRef, 1, ExpectTokenStrings::strCOL, ErrHandler>;
 		ExpectColor expectColor;
 		
-		typedef Expect<ReadF<float>, float, 1, ExpectTokenStrings::strNUM, ErrHandler> ExpectNumber;
+		using ExpectNumber = Expect<ReadF<float>, float, 1, ExpectTokenStrings::strNUM, ErrHandler>;
 		ExpectNumber expectNumber;
 		
-		typedef Expect<ReadF<std::string>, std::string, 1, ExpectTokenStrings::strID, ErrHandler> ExpectIdent;
+		using ExpectIdent = Expect<ReadF<std::string>, std::string, 1, ExpectTokenStrings::strID, ErrHandler>;
 		ExpectIdent expectIdent;
 		
-		typedef Expect<ReadF<Position>, Position, 3 * ExpectNumber::TokenCount, ExpectTokenStrings::strPOS, ErrHandler> ExpectPosition;
+		using ExpectPosition = Expect<ReadF<Position>, Position, 3 * ExpectNumber::TokenCount, ExpectTokenStrings::strPOS, ErrHandler>;
 		ExpectPosition expectPosition;
 		
-		typedef Expect<ReadF<Line>, Line, 2 * ExpectPosition::TokenCount, ExpectTokenStrings::strLINE, ErrHandler> ExpectLine;
+		using ExpectLine = Expect<ReadF<Line>, Line, 2 * ExpectPosition::TokenCount, ExpectTokenStrings::strLINE, ErrHandler>;
 		ExpectLine expectLine;
 		
-		typedef Expect<ReadF<Triangle>, Triangle, 3 * ExpectPosition::TokenCount, ExpectTokenStrings::strTRI, ErrHandler> ExpectTriangle;
+		using ExpectTriangle = Expect<ReadF<Triangle>, Triangle, 3 * ExpectPosition::TokenCount, ExpectTokenStrings::strTRI, ErrHandler>;
 		ExpectTriangle expectTriangle;
 		
-		typedef Expect<ReadF<Quad>, Quad, 4 * ExpectPosition::TokenCount, ExpectTokenStrings::strQUAD, ErrHandler> ExpectQuad;
+		using ExpectQuad = Expect<ReadF<Quad>, Quad, 4 * ExpectPosition::TokenCount, ExpectTokenStrings::strQUAD, ErrHandler>;
 		ExpectQuad expectQuad;
 		
-		typedef Expect<ReadF<OptLine>, OptLine, 2 * 2 * ExpectPosition::TokenCount, ExpectTokenStrings::strOPT, ErrHandler> ExpectOptLine;
+		using ExpectOptLine = Expect<ReadF<OptLine>, OptLine, 2 * 2 * ExpectPosition::TokenCount, ExpectTokenStrings::strOPT, ErrHandler>;
 		ExpectOptLine expectOptLine;
 		
-		typedef Expect<ReadF<TransMatrix>, TransMatrix, ExpectPosition::TokenCount + 9 * ExpectNumber::TokenCount, ExpectTokenStrings::strMAT, ErrHandler> ExpectMat;
+		using ExpectMat = Expect<ReadF<TransMatrix>, TransMatrix, ExpectPosition::TokenCount + 9 * ExpectNumber::TokenCount, ExpectTokenStrings::strMAT, ErrHandler>;
 		ExpectMat expectMat;
 		
 		bool expectFileName(TokenStream::const_iterator &tokenIt, const TokenStream::const_iterator &eol,
@@ -158,7 +161,7 @@ namespace LDParse{
 										}
 										case NoFile:
 											if(strict){
-												nextAction = mMPD(boost::none);
+												nextAction = mMPD(std::nullopt);
 											} else {  // Garbage has already been filtered at this point.
 												break;
 											}
@@ -258,17 +261,17 @@ namespace LDParse{
 		
 	};
 	
-	typedef Action (*MPDF)(boost::optional<const std::string&> file);
-	typedef Action (*MetaF)(TokenStream::const_iterator &tokenIt, const TokenStream::const_iterator &eolIt);
-	typedef Action (*InclF)(const ColorRef &c, const TransMatrix &t, const std::string &name);
-	typedef Action (*LineF)(const ColorRef &c, const Line &l);
-	typedef Action (*TriF)(const ColorRef &c, const Triangle &t);
-	typedef Action (*QuadF)(const ColorRef &c, const Quad &q);
-	typedef Action (*OptF)(const ColorRef &c, const OptLine &o);
-	typedef void (*EOFF)();
+	using MPDF = Action (*)(std::optional<std::reference_wrapper<const std::string>> file);
+	using MetaF = Action (*)(TokenStream::const_iterator &tokenIt, const TokenStream::const_iterator &eolIt);
+	using InclF = Action (*)(const ColorRef &c, const TransMatrix &t, const std::string &name);
+	using LineF = Action (*)(const ColorRef &c, const Line &l);
+	using TriF = Action (*)(const ColorRef &c, const Triangle &t);
+	using QuadF = Action (*)(const ColorRef &c, const Quad &q);
+	using OptF = Action (*)(const ColorRef &c, const OptLine &o);
+	using EOFF = void (*)();
 	
 	namespace DummyImpl {
-		static MPDF dummyMPD = [](boost::optional<const std::string&>){ return Action(); };
+		static MPDF dummyMPD = [](std::optional<std::reference_wrapper<const std::string>>){ return Action(); };
 		static MetaF dummyMeta = [](TokenStream::const_iterator &, const TokenStream::const_iterator &){ return Action(); };
 		static InclF dummyIncl = [](const ColorRef &, const TransMatrix &, const std::string &){ return Action(); };
 		static LineF dummyLine = [](const ColorRef &, const Line &){ return Action(); };
@@ -278,8 +281,7 @@ namespace LDParse{
 		static EOFF dummyEOF = [](){};
 	};
 	
-	typedef Parser<MPDF, MetaF, InclF, LineF, TriF, QuadF, OptF, EOFF, ErrF> CallbackParser;
+	using CallbackParser = Parser<MPDF, MetaF, InclF, LineF, TriF, QuadF, OptF, EOFF, ErrF>;
 	
 	
 }
-#endif

@@ -3,24 +3,25 @@
 //  LDParse
 //
 //  Created by Thomas Dickerson on 1/18/16.
-//  Copyright © 2016 StickFigure Graphic Productions. All rights reserved.
+//  Copyright © 2016 - 2020 StickFigure Graphic Productions. All rights reserved.
 //
 
 #ifndef Cache_h
 #define Cache_h
 
 #include <algorithm>
+#include <cassert>
+#include <functional>
+#include <iostream>
+#include <locale>
+#include <optional>
 #include <string>
 #include <vector>
-#include <locale>
-#include <iostream>
-#include <cassert>
-#include <boost/optional.hpp>
 
 namespace LDParse {
 	namespace Cache {
-		template<typename Contents> class CacheNode {
-		private:
+		template<typename Contents>
+		class CacheNode {
 			std::unique_ptr<Contents> mContents;
 			std::string mPrefix;
 			std::vector<std::unique_ptr<CacheNode>> mSuffixes; // Semantically, this is a set, but we don't use any of the nice set operations, so...
@@ -50,7 +51,10 @@ namespace LDParse {
 				return upper;
 			}
 		public:
-			boost::optional<Contents&> find(std::string nodeName, int depth=-1) const {
+			using MaybeContents = std::optional<std::reference_wrapper<Contents>>;
+			using MaybeCacheNode = std::optional<std::reference_wrapper<CacheNode>>;
+			
+			MaybeContents find(std::string nodeName, int depth=-1) const {
 				std::string ds("");
 				if(depth >= 0){
 					depth++;
@@ -60,7 +64,7 @@ namespace LDParse {
 				size_t cpS = commonPrefix.size();
 				size_t nnS = nodeName.size();
 				size_t mpS = mPrefix.size();
-				boost::optional<Contents&> retVal = boost::none;
+				MaybeContents retVal = std::nullopt;
 				if(depth >= 0){
 					std::cout << ds << "Looking for " << nodeName << ", mPrefix is \"" << mPrefix << "\"" << std::endl;
 					std::cout << ds << "- Node has children - " << std::endl;
@@ -105,16 +109,16 @@ namespace LDParse {
 				if((mpS == 0 && cpS == 0) || (cpS < nnS && cpS == mpS)){ // ("","something") or ("cat","catsup")
 					curSuffix = nodeName.substr(cpS, nnS - cpS);
 					std::unique_ptr<CacheNode> sufNode(new CacheNode(curSuffix));
-					boost::optional<CacheNode&> checkNode = boost::none;
+					MaybeCacheNode checkNode = std::nullopt;
 					for(auto checkIt = mSuffixes.begin(); checkIt != mSuffixes.end() && (*checkIt); checkIt++) {
 						checkNode = **checkIt;
-						if(findCommonPrefix(curSuffix,checkNode->mPrefix) == "") checkNode = boost::none;
+						if(findCommonPrefix(curSuffix,checkNode->get().mPrefix) == "") checkNode = std::nullopt;
 						else break;
 					}
 					
 					if(checkNode) {
 						// sufNode will delete itself, because yay unique_ptr
-						retNode = &(checkNode->insert(curSuffix, std::move(contents), depth));
+						retNode = &(checkNode->get().insert(curSuffix, std::move(contents), depth));
 					} else {
 						sufNode->setContents(std::move(contents));
 						retNode = sufNode.get();
@@ -170,7 +174,7 @@ namespace LDParse {
 			}
 			
 			void setContents(std::unique_ptr<Contents> newContents){ mContents = std::move(newContents); }
-			boost::optional<Contents&> getContents() const {return mContents ? boost::optional<Contents&>(*mContents) : boost::none;};
+			MaybeContents getContents() const { return mContents ? MaybeContents(*mContents) : std::nullopt; }
 			
 			static CacheNode* makeRoot(){ return new CacheNode; }
 			

@@ -22,19 +22,20 @@ void err(std::string msg, std::string tok, bool fatal) {
 static LDParse::ErrF errF = &err;
 
 /*
-typedef Action (*MPDF)(boost::optional<const std::string&>);
-typedef Action (*MetaF)(TokenStream::const_iterator &tokenIt, const TokenStream::const_iterator &eolIt);
-typedef Action (*InclF)(const ColorRef &c, const TransMatrix &t, const std::string &name);
-typedef Action (*LineF)(const ColorRef &c, const Line &l);
-typedef Action (*TriF)(const ColorRef &c, const Triangle &t);
-typedef Action (*QuadF)(const ColorRef &c, const Quad &q);
-typedef Action (*OptF)(const ColorRef &c, const OptLine &o);
+ using MPDF = Action (*)(std::optional<std::reference_wrapper<const std::string>> file);
+ using MetaF = Action (*)(TokenStream::const_iterator &tokenIt, const TokenStream::const_iterator &eolIt);
+ using InclF = Action (*)(const ColorRef &c, const TransMatrix &t, const std::string &name);
+ using LineF = Action (*)(const ColorRef &c, const Line &l);
+ using TriF = Action (*)(const ColorRef &c, const Triangle &t);
+ using QuadF = Action (*)(const ColorRef &c, const Quad &q);
+ using OptF = Action (*)(const ColorRef &c, const OptLine &o);
+ using EOFF = void (*)();
 */
 
-static LDParse::MPDF mpdHandler = [](boost::optional<const std::string &> file) {
+static LDParse::MPDF mpdHandler = [](std::optional<std::reference_wrapper<const std::string>> file) {
 	std::cout << "0 ";
 	if(file) {
-		std::cout << "FILE " << *file;
+		std::cout << "FILE " << file->get();
 	} else {
 		std::cout << "NOFILE";
 	}

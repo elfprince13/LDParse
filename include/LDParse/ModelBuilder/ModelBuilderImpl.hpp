@@ -12,16 +12,17 @@
 
 namespace LDParse {
 	
-	template<typename ErrF>	Action ModelBuilder<ErrF>::handleMPDCommand(Model& target, boost::optional<const std::string&> file){
+	template<typename ErrF>
+	Action ModelBuilder<ErrF>::handleMPDCommand(Model& target, std::optional<std::reference_wrapper<const std::string>> file){
 		std::cout << "0 ";
 		if(file) {
-			std::cout << "FILE " << *file;
+			std::cout << "FILE " << file->get();
 		} else {
 			std::cout << "NOFILE";
 		}
 		std::cout << std::endl;
 		
-		if(file && file->compare(target.mName)){
+		if(file && file->get().compare(target.mName)){
 			Model * subModel = new Model(*file, target.mSrcLoc, MPDSubT, target.mColorTable, target.mSubModelNames, target.mSubModels);
 			target.mSubModels->insert(*file, std::unique_ptr<Model>(subModel));
 			recordTo(subModel);
@@ -64,7 +65,7 @@ namespace LDParse {
 				}
 				
 				if(success){
-					boost::optional<uint16_t> lVal;
+					std::optional<uint16_t> lVal;
 					if(target.mSrcType == ConfigT){
 						target.mColorTable.setColour(code.second, v.second);
 						target.mColorTable.setComplement(code.second, (e.first || !(lVal = target.mColorTable.addLocalColour(e.second))) ? e.second : *lVal);
@@ -146,8 +147,8 @@ namespace LDParse {
 	Action ModelBuilder<ErrF>::handleInclude(Model& target, const ColorRef &, const TransMatrix &, const std::string &name){
 		if(indeterminate(target.mCertify)) target.mCertify = false;
 		Action ret = Action();
-		boost::optional<const size_t&> subIndex;
-		boost::optional<const Model&> subModel;
+		std::optional<std::reference_wrapper<const size_t>> subIndex;
+		std::optional<std::reference_wrapper<const Model>> subModel;
 		// This may be a performance bottleneck and we'll have to combine the two trees, but that would require us to tackle the typing more directly.
 		if(target.mSubModelNames && (subIndex = target.mSubModelNames->find(name)) && !(subModel = target.mSubModels->find(name))){
 			std::cout << "Switching file to " << name << std::endl;

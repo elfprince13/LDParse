@@ -6,16 +6,16 @@
 //  Copyright © 2016 StickFigure Graphic Productions. All rights reserved.
 //
 
-#ifndef ModelBuilderDefs_h
-#define ModelBuilderDefs_h
+#pragma once
 
 #include <LDParse/Model.hpp>
 
 namespace LDParse {
 	template<typename ErrF> class ModelBuilder{
 	private:
-		template<typename R, typename ...ArgTs> struct CallbackMethod{
-			typedef R(ModelBuilder::*CallbackM)(Model&, ArgTs... args);
+		template<typename R, typename ...ArgTs>
+		struct CallbackMethod{
+			using CallbackM = R(ModelBuilder::*)(Model&, ArgTs... args);
 			ModelBuilder *mSelf;
 			const CallbackM mCallbackM;
 			Model * mTarget;
@@ -38,8 +38,8 @@ namespace LDParse {
 		
 		ErrF &mErr;
 		
-		Action handleMPDCommand(Model& target, boost::optional<const std::string&> file);
-		CallbackMethod<Action, boost::optional<const std::string&> > mpdCallback;
+		Action handleMPDCommand(Model& target, std::optional<std::reference_wrapper<const std::string>> file);
+		CallbackMethod<Action, std::optional<std::reference_wrapper<const std::string>> > mpdCallback;
 		
 		Action handleMetaCommand(Model& target, TokenStream::const_iterator &tokenIt, const TokenStream::const_iterator &eolIt);
 		CallbackMethod<Action, TokenStream::const_iterator &, const TokenStream::const_iterator &> metaCallback;
@@ -79,14 +79,12 @@ namespace LDParse {
 		std::unordered_set<const Model*> mInvertNext;
 		std::unordered_set<const Model*> mClipping;
 		
-		typedef Parser<decltype(mpdCallback), decltype(metaCallback), decltype(inclCallback),
+		using ModelParser = Parser<decltype(mpdCallback), decltype(metaCallback), decltype(inclCallback),
 		decltype(lineCallback), decltype(triCallback), decltype(quadCallback), decltype(optLineCallback),
-		decltype(eofCallback), ErrF > ModelParser;
+		decltype(eofCallback), ErrF >;
 		ModelParser mParser;
 	public:
 		ModelBuilder(ErrF &errF);
 		Model* construct(std::string srcLoc, std::string modelName, std::istream &fileContents, ColorTable& colorTable, SrcType srcType = UnknownT);
 	};
 }
-
-#endif /* ModelBuilderDefs_h */

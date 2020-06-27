@@ -13,8 +13,8 @@
 namespace LDParse {
 	ColorTable::ColorTable() : mNextFree(512), mColors(mNextFree, 0), mComplements(mNextFree, 0) { }
 	
-	boost::optional<uint32_t> ColorTable::getColour(uint16_t code) const{
-		boost::optional<uint32_t> ret = boost::none;
+	std::optional<uint32_t> ColorTable::getColour(uint16_t code) const{
+		std::optional<uint32_t> ret = std::nullopt;
 		if(code < mNextFree) ret = mColors[code];
 		return ret;
 	}
@@ -33,8 +33,8 @@ namespace LDParse {
 		return ret;
 	}
 	
-	boost::optional<uint16_t> ColorTable::addLocalColour(uint32_t color){
-		boost::optional<uint16_t> ret = boost::none;
+	std::optional<uint16_t> ColorTable::addLocalColour(uint32_t color){
+		std::optional<uint16_t> ret = std::nullopt;
 		if(mNextFree < std::numeric_limits<uint16_t>::max()){
 			mColors.push_back(color);
 			mComplements.push_back(0);

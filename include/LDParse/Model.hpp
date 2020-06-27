@@ -3,7 +3,7 @@
 //  LDParse
 //
 //  Created by Thomas Dickerson on 1/18/16.
-//  Copyright © 2016 StickFigure Graphic Productions. All rights reserved.
+//  Copyright © 2016 - 2020 StickFigure Graphic Productions. All rights reserved.
 //
 
 #ifndef Model_h
@@ -22,9 +22,9 @@
 
 namespace LDParse{
 
-	typedef Mesh<Position, Position, uint32_t> LDMesh;
+	using LDMesh = Mesh<Position, Position, uint32_t>;
 	
-	typedef enum : uint8_t {
+	enum SrcType : uint8_t {
 		ConfigT = 0,
 		PrimitiveT = 1,
 		PartT = 2,
@@ -32,19 +32,19 @@ namespace LDParse{
 		MPDRootT = 4,
 		MPDSubT = 5,
 		UnknownT = 6
-	} SrcType;
+	};
 	
-	typedef enum : int8_t {
+	enum BFCStatus : int8_t {
 		BFCOff = -1,
 		Standard = 0,
 		Invert = 1
-	} BFCStatus;
+	};
 	
 	class Model {
 		template<typename ErrF> friend class ModelBuilder;
 	public:
-		typedef Cache::CacheNode<const Model> CacheType;
-		typedef Cache::CacheNode<const size_t> IndexType;
+		using CacheType = Cache::CacheNode<const Model>;
+		using IndexType = Cache::CacheNode<const size_t>;
 	private:
 		std::string mName;
 		std::string mSrcLoc;
