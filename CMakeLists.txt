@@ -28,12 +28,13 @@ include_directories(${Boost_INCLUDE_DIRS})
 #add_definitions(${LIBIGL_DEFINITIONS})
 #
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/deps/immer)
 #set(LDPARSE_INCLUDE_DIR ${Boost_INCLUDE_DIRS} #[[${LIBIGL_INCLUDE_DIRS}]] ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)
 
 
 file(GLOB_RECURSE LDPARSE_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/include/LDParse/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/LDParse/*.cpp)
-add_library(LDParse STATIC ${LDPARSE_SOURCE})
-add_executable(parsetest ParseTest/main.cpp)
-target_link_libraries(LDParse ${LIBIGL_LIBRARIES} ${LIBIGL_EXTRA_LIBRARIES})
-target_link_libraries(parsetest LDParse)
+add_library(LDParse SHARED ${LDPARSE_SOURCE})
+#target_link_libraries(LDParse ${LIBIGL_LIBRARIES} ${LIBIGL_EXTRA_LIBRARIES})
+
+add_subdirectory(face-unwrapper)
+add_subdirectory(parsetest)
