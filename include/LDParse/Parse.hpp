@@ -169,7 +169,9 @@ namespace LDParse{
 						switch((token++)->k){
 							case Zero:
 								if(token != eol){
-									switch((token++)->k){
+									
+									switch(auto heldToken = token++;
+										   heldToken->k){
 										case File:{
 											std::string name;
 											if(ret &= expectIdent(token, eol, name)){
@@ -185,7 +187,7 @@ namespace LDParse{
 												break;
 											}
 										default:
-											if(ret) nextAction = mMeta(token, eol);
+											if(ret) nextAction = mMeta(heldToken, eol);
 									}
 								} else if(strict){
 									nextAction = mMeta(token, eol) /* nb token == eol, but the types are important */;
