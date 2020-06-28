@@ -41,6 +41,7 @@ namespace LDParse {
 	auto colorYielder(Yield& yield, ParserBase<ErrF>& parser) {
 		return [&](TokenStream::const_iterator &tokenIt, const TokenStream::const_iterator &eolIt) -> Action {
 			bool success = true;
+			auto& oldToken = *tokenIt;
 			switch ((tokenIt++)->k) {
 				default: break;
 				case Colour: {
@@ -106,6 +107,38 @@ namespace LDParse {
 		};
 	}
 	
+	template<class Yield>
+	auto inclYielder(Yield& yield) {
+		return [&](const ColorRef& color, const TransMatrix& transform, const std::string& file) -> Action {
+			yield(std::make_tuple(color, transform, file));
+			return Action();
+		};
+	}
+	
+	template<class Yield>
+	auto lineYielder(Yield& yield) {
+		return [&](const ColorRef& color, const Line& line) -> Action {
+			yield(std::make_tuple(color, line));
+			return Action();
+		};
+	}
+	
+	template<class Yield>
+	auto triYielder(Yield& yield) {
+		return [&](const ColorRef& color, const Triangle& tri) -> Action {
+			yield(std::make_tuple(color, tri));
+			return Action();
+		};
+	}
+	
+	template<class Yield>
+	auto quadYielder(Yield& yield) {
+		return [&](const ColorRef& color, const Quad& quad) -> Action {
+			yield(std::make_tuple(color, quad));
+			return Action();
+		};
+	}
+	
 	using ConfigCoroutine = BidirectionalCoroutine<Color>;
 	using SVGCoroutine = BidirectionalCoroutine<
 		std::variant<
@@ -118,26 +151,50 @@ namespace LDParse {
 	>;
 }
 
-static LDParse::MPDF mpdHandler = [](std::optional<std::reference_wrapper<const std::string>> file) {
-	std::cout << "0 ";
-	if(file) {
-		std::cout << "FILE " << file->get();
-	} else {
-		std::cout << "NOFILE";
-	}
-	std::cout << std::endl;
-	return LDParse::Action();
-};
-
 int main(int argc, const char * argv[]) {
-	if(argc < 2){
-		std::cerr << "Requires a filename to run" << std::endl;
+	if(argc < 4){
+		std::cerr << "face-unwrapper ldpath configpath facefile" << std::endl;
 		exit(-1);
 	}
-	std::string fileName = argv[1];
-	std::ifstream file(fileName);
+	std::string ldPath = argv[1];
+	std::string configPath = argv[2];
+	std::string facePath = argv[3];
+	//std::ifstream faceFile(facePath);
 	
-	LDParse::ColorTable colors;
+	using namespace LDParse;
+	ColorScope colors;
+	
+	
+	ModelStream models;
+	std::string rootName = configPath;
+	
+	{
+		std::ifstream configFile(configPath);
+		Lexer<ErrF> lexer(configFile, errF);
+		bool isMPD = lexer.lexModelBoundaries(models, rootName);
+		
+		if(isMPD) {
+			std::cerr << "ldconfig.ldr must not be an mpd" << std::endl;
+			exit(-2);
+		}
+	}
+	
+	ConfigCoroutine configReader([&](ConfigCoroutine::Yield & yield) -> void {
+		using namespace DummyImpl;
+		ParserBase<ErrF> pBase(errF);
+		auto parser = makeParser(dummyMPD, colorYielder(yield, pBase), dummyIncl, dummyLine
+								 , dummyTri, dummyQuad, dummyOpt, dummyEOF, errF);
+		yield();
+		parser.parseModels(models);
+	});
+	
+	size_t numColors = 0;
+	for(std::reference_wrapper<const Color> color = configReader(); configReader; (color = configReader(), ++numColors)) {
+		colors.record(color);
+	}
+	std::cout << configPath << " contained " << numColors << " color definitions" << std::endl;
+	colors.commit();
+	
 	//LDParse::ModelBuilder<LDParse::ErrF> modelBuilder(errF);
 	//LDParse::Model * model = modelBuilder.construct(fileName, fileName, file, colors);
 	

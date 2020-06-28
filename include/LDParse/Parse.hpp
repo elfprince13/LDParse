@@ -49,7 +49,8 @@ namespace LDParse{
 	
 	template<typename ErrHandler>
 	class ParserBase {
-		ErrHandler &mErr;
+	protected:
+		ErrHandler mErr;
 	public:
 		template<typename Out>
 		using ReadF = ReadF<Out, ErrHandler>;
@@ -96,7 +97,7 @@ namespace LDParse{
 			return true;
 		}
 		
-		ParserBase(ErrHandler &e)
+		ParserBase(ErrHandler e)
 		: mErr(e),
 		expectKeyword(mErr, readKeyword),
 		expectEOL(mErr),
@@ -116,14 +117,14 @@ namespace LDParse{
 				typename OptHandler, typename EOFHandler, typename ErrHandler>
 	class Parser : public ParserBase<ErrHandler> {
 		Winding winding;
-		MPDHandler &mMPD;
-		MetaHandler &mMeta;
-		IncludeHandler &mIncl;
-		LineHandler &mLine;
-		TriangleHandler &mTri;
-		QuadHandler &mQuad;
-		OptHandler &mOpt;
-		EOFHandler &mEOF;
+		MPDHandler mMPD;
+		MetaHandler mMeta;
+		IncludeHandler mIncl;
+		LineHandler mLine;
+		TriangleHandler mTri;
+		QuadHandler mQuad;
+		OptHandler mOpt;
+		EOFHandler mEOF;
 		
 	public:
 		using SelfType = Parser<MPDHandler, MetaHandler, IncludeHandler, LineHandler, TriangleHandler, QuadHandler, OptHandler, EOFHandler, ErrHandler>;
@@ -143,7 +144,7 @@ namespace LDParse{
 		using SuperType::expectMat;
 		using SuperType::expectFileName;
 		
-		Parser(MPDHandler &mpd, MetaHandler &m, IncludeHandler &i, LineHandler &l, TriangleHandler &t, QuadHandler &q, OptHandler &o, EOFHandler &eof, ErrHandler &e)
+		Parser(MPDHandler mpd, MetaHandler m, IncludeHandler i, LineHandler l, TriangleHandler t, QuadHandler q, OptHandler o, EOFHandler eof, ErrHandler e)
 		:  SuperType(e), winding(CCW),
 		mMPD(mpd), mMeta(m), mIncl(i), mLine(l), mTri(t), mQuad(q), mOpt(o), mEOF(eof) {}
 		
@@ -303,6 +304,11 @@ namespace LDParse{
 	};
 	
 	using CallbackParser = Parser<MPDF, MetaF, InclF, LineF, TriF, QuadF, OptF, EOFF, ErrF>;
+	
+	template<typename ...Args>
+	auto makeParser(Args&& ...args) {
+		return Parser<Args...>(std::forward<Args>(args)...);
+	}
 	
 	
 }
