@@ -17,6 +17,7 @@ namespace fs = std::filesystem;
 namespace fs = boost::filesystem;
 #endif
 
+#include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <stack>
@@ -199,49 +200,189 @@ namespace LDParse {
 #define X_OFF (RADIUS * 2 * M_PI)
 static glm::vec2 translater(X_OFF, 0);
 
-glm::vec2 unwrap_cylinder(glm::vec4 pos) {
+static float rotation = 0.0;
+
+glm::vec2 unwrap_cylinder(const glm::vec4& pos) {
+	//float slope = pos.z / pos.x;
 	float theta = (pos.z == 0 && pos.x == 0) ? 0 : glm::atan(pos.z, pos.x);
-	theta += M_PI;
+	if(theta < 0) {
+		theta += 2*M_PI;
+	}
 	
-	return glm::vec2(theta * RADIUS, pos.y);
+	theta = std::remainder(theta + rotation,2*M_PI);
+	
+	glm::vec2 retVec(theta * RADIUS, pos.y);
+	return retVec;
 }
 
 std::string hexColor(const LDParse::RGB &rgb) {
 	return fmt::sprintf("#%02x%02x%02x",rgb.r(), rgb.g(), rgb.b());
 }
 
-template<size_t N>
-class SeqFmt {
-	template<size_t ...I>
-	static constexpr std::array<char,3*N> applyHelper(std::index_sequence<I...>){
-		return {((I % 3) ? (((I % 3) == 2) ? ' ' : 's' ) : '%') ..., '\0' };
-	}
-public:
-	static constexpr std::array<char,3*N> apply() {
-		return applyHelper(std::make_index_sequence<3*N-1>());
-	}
-};
 std::string fmtPoint(const glm::vec2& point) {
 	return fmt::sprintf("%f,%f",point.x,point.y);
 }
 
-template<typename ...Args>
-void polygon(const LDParse::ColorData &color, const Args& ... args) {
-	auto metafmt = fmt::sprintf("<polygon points=\"%s\" fill=\"%%s\" stroke=\"none\" fill-opacity=\"%%d%%%%\" />\n",
-								SeqFmt<sizeof...(args)>::apply().data());
+std::vector<std::string> fmtPoints(const std::vector<glm::vec2>& points) {
+	std::vector<std::string> output;
+	std::transform(points.cbegin(), points.cend(), std::back_inserter(output), fmtPoint);
+	return output;
+}
+
+using LeftRightCut = std::tuple<std::optional<std::tuple<glm::vec2,glm::vec2>>,std::optional<std::tuple<glm::vec2,glm::vec2>>>;
+
+LeftRightCut splitLeftRight(const double cutX, const glm::vec2 &s, const glm::vec2 &t) {
 	
-	fmt::printf(metafmt, fmtPoint(args)...,
-				hexColor(color.color), (int)(100*(color.alpha.value_or(255) / 255.)));
+		if(s.x < cutX && t.x < cutX) {
+			return std::make_tuple(std::make_tuple(s,t), std::nullopt);
+		} else if(s.x >= cutX && t.x >= cutX) {
+			return std::make_tuple(std::nullopt, std::make_tuple(s,t));
+		} else {
+			// run must be non-zero since we're straddling a line
+			const float m = (t.y - s.y) / (t.x - s.x);
+			const float cutY = m * (cutX - s.x) + s.y;
+			glm::vec2 cutPoint(cutX, cutY);
+			if (s.x < cutX && t.x >= cutX) {
+				return std::make_tuple(std::make_tuple(s, cutPoint),
+									   std::make_tuple(cutPoint, t));
+			} else if (s.x >= cutX && t.x < cutX) {
+				return std::make_tuple(std::make_tuple(cutPoint, t),
+									   std::make_tuple(s, cutPoint));
+				
+			} else {
+				throw std::logic_error("These options should be mutually exclusive");
+			}
+		}
+}
+
+void pruneDegenerate(std::vector<glm::vec2> poly) {
+	poly.erase(std::unique(poly.begin(), poly.end()), poly.end());
+	if(poly.size() && poly.back() == poly.front()) {
+		poly.pop_back();
+	}
+	
+	if(poly.size() < 3) {
+		poly.clear();
+	}
+}
+
+std::tuple<std::vector<glm::vec2>, std::vector<glm::vec2>> splitLeftRight(const double cutX, const std::vector<glm::vec2>& args) {
+	std::vector<glm::vec2> left, right;
+	const size_t n = args.size();
+	for(size_t i = 0; i < n; ++i) {
+		auto [lp, rp] = splitLeftRight(cutX, args[i], args[(i+1) % n]);
+		if(lp) {
+			const auto& [ls, lt] = *lp;
+			left.push_back(ls);
+			if(rp) {
+				const auto& [rs, rt] = *rp;
+				if(lt == rs){
+					left.push_back(lt);
+				}
+			}
+		}
+		
+		if(rp){
+			const auto& [rs, rt] = *rp;
+			right.push_back(rs);
+			if(lp) {
+				const auto& [ls, lt] = *lp;
+				if(rt == ls){
+					right.push_back(rt);
+				}
+			}
+		}
+	}
+	
+	size_t oldLeftSize = left.size();
+	size_t oldRightSize = right.size();
+	
+	pruneDegenerate(left);
+	pruneDegenerate(right);
+	
+	
+	if(oldLeftSize && !left.size()) {
+		std::cerr << "<!-- Somehow we got a degenerate polygon left of " << cutX << " -->" << std::endl;
+	}
+	
+	if(oldRightSize && !right.size()) {
+		std::cerr << "<!-- Somehow we got a degenerate polygon right of " << cutX << " -->" << std::endl;
+	}
+	
+	return std::make_tuple(std::move(left), std::move(right));
+}
+
+void svgLine(const LDParse::ColorData &color, const glm::vec2& p1, const glm::vec2& p2) {
+	if(p1 != p2) {
+		fmt::printf("<line x1=\"%f\" x2=\"%f\" y1=\"%f\" y2=\"%f\""
+					" stroke=\"%s\" stroke-opacity=\"%d%%\" stroke-width=\"%f\" />\n",
+					p1.x, p2.x, p1.y, p2.y,
+					hexColor(color.color), (int)(100*(color.alpha.value_or(255)/255.)), 1.);
+	}
+}
+
+void svgToroidalLine(const LDParse::ColorData &color, const glm::vec2& p1, const glm::vec2& p2) {
+	auto [left, rightIsh] = splitLeftRight(0, p1, p2);
+	if(left) {
+		const auto& [lp1, lp2] = *left;
+		svgLine(color, lp1 + translater, lp2 + translater);
+	}
+	if(rightIsh) {
+		const auto& [rip1, rip2] = *rightIsh;
+		auto [center, right] = splitLeftRight(X_OFF, rip1, rip2);
+		if(center){
+			const auto& [cp1, cp2] = *center;
+			svgLine(color, cp1, cp2);
+		}
+		if(right){
+			const auto& [rp1, rp2] = *right;
+			svgLine(color, rp1 - translater, rp2 - translater);
+		}
+	}
+}
+
+void svgPolygon(const LDParse::ColorData &color, const std::vector<glm::vec2>& args) {
+	if(args.size() >= 3){
+		fmt::print("<polygon points=\"{}\" fill=\"{}\" stroke=\"none\" fill-opacity=\"{}%\" />\n",
+				   fmt::join(fmtPoints(args), " "),
+				   hexColor(color.color),
+				   (int)(100*(color.alpha.value_or(255) / 255.)));
+	}
+}
+
+void svgToroidalPolygon(const LDParse::ColorData &color, const std::vector<glm::vec2>& args) {
+	auto [left, rightIsh] = splitLeftRight(0, args);
+	if(left.size()){
+		std::transform(left.cbegin(), left.cend(), left.begin(), [](const glm::vec2& p){ return p + translater; });
+		svgPolygon(color, left);
+	}
+	if(rightIsh.size()) {
+		auto [center, right] = splitLeftRight(X_OFF, rightIsh);
+		if(center.size()) {
+			svgPolygon(color, center);
+		}
+		
+		if(right.size()) {
+			std::transform(right.cbegin(), right.cend(), right.begin(), [](const glm::vec2& p){ return p - translater; });
+			svgPolygon(color, right);
+		}
+	}
+	
+	
 }
 
 int main(int argc, const char * argv[]) {
 	if(argc < 4){
-		std::cerr << "face-unwrapper ldpath configpath facefile" << std::endl;
+		std::cerr << "face-unwrapper ldpath configpath facefile [rotation]" << std::endl;
 		exit(-1);
 	}
 	fs::path ldPath(argv[1]);
 	fs::path configPath(argv[2]);
 	fs::path facePath(argv[3]);
+	
+	if(argc > 4) {
+		rotation = atof(argv[4]) * 2 * M_PI;
+	}
 	
 	auto partsPath = ldPath / "parts";
 	if(!fs::exists(partsPath)) {
@@ -325,7 +466,7 @@ int main(int argc, const char * argv[]) {
 	// Docs say mat4(1.0) is the identity
 	parseStack.emplace(SVGCoroutine(parse(facePath)), glm::mat4(1.0), colors, DEFAULT_COLOR, DEFAULT_COLOR);
 	
-	const float svgWidth = 2 * X_OFF;
+	const float svgWidth = X_OFF;
 	const float svgHeight = 21;
 	fmt::printf("<?xml version=\"1.0\" standalone=\"no\"?>\n");
 	fmt::printf("<svg width=\"%f\" height=\"%f\" version=\"1.1\""
@@ -392,14 +533,7 @@ int main(int argc, const char * argv[]) {
 					auto sProj = unwrap_cylinder(s);
 					auto tProj = unwrap_cylinder(t);
 					
-					for(size_t i = 0; i < 2; ++i) {
-						fmt::printf("<line x1=\"%f\" x2=\"%f\" y1=\"%f\" y2=\"%f\""
-									" stroke=\"%s\" stroke-opacity=\"%d%%\" stroke-width=\"%f\" />\n",
-									sProj.x, tProj.x, sProj.y, tProj.y,
-									hexColor(color.color), (int)(100*(color.alpha.value_or(255)/255.)), 1.);
-						sProj += translater;
-						tProj += translater;
-					}
+					svgToroidalLine(color, sProj, tProj);
 				} break;
 				case 3: {
 					auto& [colorRef, tri] = std::get<3>(command);
@@ -415,12 +549,9 @@ int main(int argc, const char * argv[]) {
 					glm::vec2 pr1 = unwrap_cylinder(v1);
 					glm::vec2 pr2 = unwrap_cylinder(v2);
 					
-					for(size_t i = 0; i < 2; ++i) {
-						polygon(color, pr0, pr1, pr2);
-						pr0 += translater;
-						pr1 += translater;
-						pr2 += translater;
-					}
+					std::vector<glm::vec2> triP({pr0, pr1, pr2});
+					pruneDegenerate(triP);
+					svgToroidalPolygon(color, triP);
 				} break;
 				case 4: {
 					auto& [colorRef, quad] = std::get<4>(command);
@@ -438,13 +569,9 @@ int main(int argc, const char * argv[]) {
 					glm::vec2 pr2 = unwrap_cylinder(v2);
 					glm::vec2 pr3 = unwrap_cylinder(v3);
 					
-					for(size_t i = 0; i < 2; ++i) {
-						polygon(color, pr0, pr1, pr2, pr3);
-						pr0 += translater;
-						pr1 += translater;
-						pr2 += translater;
-						pr3 += translater;
-					}
+					std::vector<glm::vec2> quadP({pr0, pr1, pr2, pr3});
+					pruneDegenerate(quadP);
+					svgToroidalPolygon(color, quadP);
 					
 				} break;
 				default:
