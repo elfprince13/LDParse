@@ -15,8 +15,13 @@ project(LDParse)
 set(LDPARSE_DEPS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/deps")
 list(APPEND CMAKE_MODULE_PATH "${LDPARSE_DEPS_DIRECTORY}")
 
-find_package(Boost 1.67 REQUIRED COMPONENTS context)
+find_package(Boost 1.67 REQUIRED COMPONENTS context filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
+
+find_package(glm REQUIRED CONFIG)
+include_directories(${GLM_INCLUDE_DIRS})
+
+find_package(fmt REQUIRED CONFIG)
 
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/include

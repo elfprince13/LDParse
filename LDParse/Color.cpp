@@ -19,6 +19,12 @@ namespace LDParse {
 	uint8_t& RGB::b() { return (*this)[2]; }
 	const uint8_t& RGB::b() const { return (*this)[2]; }
 	
+	void RGB::setFromHex(uint32_t rgb) {
+		r() = rgb & 0x00FF0000;
+		g() = rgb & 0x0000FF00;
+		b() = rgb & 0x000000FF;
+	}
+	
 	ColorScope::ColorScope()
 	: ColorMapStack()
 	, active_() {}
@@ -41,6 +47,10 @@ namespace LDParse {
 			active_.clear();
 		}
 
+	}
+	
+	bool ColorScope::hasUncommitted() const {
+		return active_.size();
 	}
 	
 	void ColorScope::record(const Color& color) {

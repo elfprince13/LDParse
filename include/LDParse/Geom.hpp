@@ -19,7 +19,7 @@ namespace LDParse{
 	
 	using ColorRef = std::pair<bool, uint32_t>;
 	using Position = std::tuple<float, float, float>;
-	using Line = std::tuple<Position, Position, Position>;
+	using Line = std::tuple<Position, Position>;
 	using Triangle = std::tuple<Position, Position, Position>;
 	using Quad = std::tuple<Position, Position, Position, Position>;
 	using OptLine = std::tuple<Line, Line>;

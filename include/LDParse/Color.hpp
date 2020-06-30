@@ -31,6 +31,8 @@ namespace LDParse {
 		const uint8_t& g() const;
 		uint8_t& b();
 		const uint8_t& b() const;
+		
+		void setFromHex(uint32_t rgb);
 	};
 	
 	struct ColorData {
@@ -69,6 +71,7 @@ namespace LDParse {
 		
 		void commit();
 		void record(const Color&);
+		bool hasUncommitted() const;
 		std::optional<std::reference_wrapper<const ColorData>> find(uint16_t code, bool findEdge = false) const;
 	};
 	
