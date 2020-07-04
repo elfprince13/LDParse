@@ -23,6 +23,7 @@ namespace fs = boost::filesystem;
 #include <stack>
 #include <utility>
 
+#include <LDParse/Install.hpp>
 #include <LDParse/Lex.hpp>
 #include <LDParse/Parse.hpp>
 #include <LDParse/Color.hpp>
@@ -197,22 +198,29 @@ namespace LDParse {
 }
 
 #define RADIUS 13
+#define MIN_RADIUS 7
+#define MIN_RADIUS_SQ (MIN_RADIUS * MIN_RADIUS)
 #define X_OFF (RADIUS * 2 * M_PI)
 static glm::vec2 translater(X_OFF, 0);
 
 static float rotation = 0.0;
 
-glm::vec2 unwrap_cylinder(const glm::vec4& pos) {
+std::optional<glm::vec2> unwrap_cylinder(const glm::vec4& pos) {
 	//float slope = pos.z / pos.x;
-	float theta = (pos.z == 0 && pos.x == 0) ? 0 : glm::atan(pos.z, pos.x);
-	if(theta < 0) {
-		theta += 2*M_PI;
+	if (pos.z * pos.z + pos.x * pos.x < MIN_RADIUS_SQ) {
+		return std::nullopt;
+	} else {
+		float theta = (pos.z == 0 && pos.x == 0) ? 0 : glm::atan(pos.z, pos.x);
+		/*
+		if(theta < 0) {
+			theta += 2*M_PI;
+		}
+		*/
+		theta += rotation;
+		
+		glm::vec2 retVec(theta * RADIUS, pos.y);
+		return retVec;
 	}
-	
-	theta = std::remainder(theta + rotation,2*M_PI);
-	
-	glm::vec2 retVec(theta * RADIUS, pos.y);
-	return retVec;
 }
 
 std::string hexColor(const LDParse::RGB &rgb) {
@@ -312,16 +320,30 @@ std::tuple<std::vector<glm::vec2>, std::vector<glm::vec2>> splitLeftRight(const 
 	return std::make_tuple(std::move(left), std::move(right));
 }
 
+void unwarpToroidalDistance(glm::vec2& here, glm::vec2& next) {
+	glm::vec2 hereShift = here + translater;
+	glm::vec2 nextShift = next + translater;
+	
+	const auto curDist = glm::distance(here, next);
+	if(curDist > glm::distance(hereShift, next)) {
+		here = hereShift;
+	} else if(curDist > glm::distance(here, nextShift)) {
+		next = nextShift;
+	}
+}
+
 void svgLine(const LDParse::ColorData &color, const glm::vec2& p1, const glm::vec2& p2) {
 	if(p1 != p2) {
 		fmt::printf("<line x1=\"%f\" x2=\"%f\" y1=\"%f\" y2=\"%f\""
 					" stroke=\"%s\" stroke-opacity=\"%d%%\" stroke-width=\"%f\" />\n",
 					p1.x, p2.x, p1.y, p2.y,
-					hexColor(color.color), (int)(100*(color.alpha.value_or(255)/255.)), 1.);
+					hexColor(color.color), (int)(100*(color.alpha.value_or(255)/255.)), 0.125);
 	}
 }
 
-void svgToroidalLine(const LDParse::ColorData &color, const glm::vec2& p1, const glm::vec2& p2) {
+void svgToroidalLine(const LDParse::ColorData &color, glm::vec2 p1, glm::vec2 p2) {
+	unwarpToroidalDistance(p1, p2);
+	
 	auto [left, rightIsh] = splitLeftRight(0, p1, p2);
 	if(left) {
 		const auto& [lp1, lp2] = *left;
@@ -343,7 +365,7 @@ void svgToroidalLine(const LDParse::ColorData &color, const glm::vec2& p1, const
 
 void svgPolygon(const LDParse::ColorData &color, const std::vector<glm::vec2>& args) {
 	if(args.size() >= 3){
-		fmt::print("<polygon points=\"{}\" fill=\"{}\" stroke=\"none\" fill-opacity=\"{}%\" />\n",
+		fmt::print("<polygon points=\"{}\" fill=\"{}\" ""stroke=\"none\""/**//*"stroke=\"#00ff00\" stroke-width=\"0.125\""/**/" fill-opacity=\"{}%\" />\n",
 				   fmt::join(fmtPoints(args), " "),
 				   hexColor(color.color),
 				   (int)(100*(color.alpha.value_or(255) / 255.)));
@@ -351,55 +373,67 @@ void svgPolygon(const LDParse::ColorData &color, const std::vector<glm::vec2>& a
 }
 
 void svgToroidalPolygon(const LDParse::ColorData &color, const std::vector<glm::vec2>& args) {
-	auto [left, rightIsh] = splitLeftRight(0, args);
+	std::vector<glm::vec2> correctedArgs(args.cbegin(), args.cend());
+	const size_t numArgs = args.size();
+	for(size_t j = 0, i=j++; i < numArgs; i=j++){
+		glm::vec2& here = correctedArgs[i];
+		glm::vec2& next = correctedArgs[j % numArgs];
+		
+		unwarpToroidalDistance(here, next);
+	}
+	
+	// No idea why, but this second loop was necessary for unofficial 3626cpx3.dat
+	for(size_t j = 0, i=j++; i < numArgs; i=j++){
+		glm::vec2& here = correctedArgs[i];
+		glm::vec2& next = correctedArgs[j % numArgs];
+		
+		unwarpToroidalDistance(here, next);
+	}
+	
+	
+	fmt::printf("<!-- toroidally wrapped polygon -->\n");
+	auto [left, rightIsh] = splitLeftRight(0, correctedArgs);
 	if(left.size()){
 		std::transform(left.cbegin(), left.cend(), left.begin(), [](const glm::vec2& p){ return p + translater; });
+		fmt::printf("\t");
 		svgPolygon(color, left);
 	}
 	if(rightIsh.size()) {
 		auto [center, right] = splitLeftRight(X_OFF, rightIsh);
 		if(center.size()) {
+			fmt::printf("\t");
 			svgPolygon(color, center);
 		}
 		
 		if(right.size()) {
 			std::transform(right.cbegin(), right.cend(), right.begin(), [](const glm::vec2& p){ return p - translater; });
+			fmt::printf("\t");
 			svgPolygon(color, right);
 		}
 	}
 	
+	fmt::printf("<!-- /toroidally wrapped polygon -->\n");
+	
 	
 }
+
+static const LDParse::ColorData DEFAULT_COLOR{{{0, 0, 0}},{0},std::nullopt,std::nullopt};
 
 int main(int argc, const char * argv[]) {
 	if(argc < 4){
 		std::cerr << "face-unwrapper ldpath configpath facefile [rotation]" << std::endl;
 		exit(-1);
 	}
-	fs::path ldPath(argv[1]);
+	
+	using namespace LDParse;
+	Install install(Install::splitPaths(argv[1]));
 	fs::path configPath(argv[2]);
 	fs::path facePath(argv[3]);
 	
 	if(argc > 4) {
 		rotation = atof(argv[4]) * 2 * M_PI;
 	}
-	
-	auto partsPath = ldPath / "parts";
-	if(!fs::exists(partsPath)) {
-		partsPath = ldPath / "PARTS";
-	}
-	
-	auto primsPath = ldPath / "p";
-	if(!fs::exists(primsPath)) {
-		primsPath = ldPath / "P";
-	}
-	
-	auto modelsPath = ldPath / "models";
-	if(!fs::exists(modelsPath)) {
-		modelsPath = ldPath / "MODELS";
-	}
-	
-	using namespace LDParse;
+
 	ColorScope colors;
 	
 	{
@@ -435,6 +469,24 @@ int main(int argc, const char * argv[]) {
 		colors.commit();
 	}
 	
+	
+	ColorData initFace, initEdge;
+	if(argc > 5) {
+		uint16_t code = atoi(argv[5]);
+		if(auto faceData = colors.find(code);
+		   faceData) {
+			initFace = *faceData;
+		} else {
+			initFace = DEFAULT_COLOR;
+		}
+		if(auto edgeData = colors.find(code, true);
+		   edgeData) {
+			initEdge = *edgeData;
+		} else {
+			initEdge = DEFAULT_COLOR;
+		}
+	}
+	
 	auto parse = [](const fs::path & modelPath) {
 		std::string rootName = modelPath.string();
 		std::ifstream modelFile(modelPath.native());
@@ -460,11 +512,10 @@ int main(int argc, const char * argv[]) {
 	};
 	
 	using ParserState = std::tuple<SVGCoroutine,glm::mat4,ColorScope,ColorData,ColorData>;
-	const ColorData DEFAULT_COLOR{{{0, 0, 0}},{0},std::nullopt,std::nullopt};
 	
 	std::stack<ParserState> parseStack;
 	// Docs say mat4(1.0) is the identity
-	parseStack.emplace(SVGCoroutine(parse(facePath)), glm::mat4(1.0), colors, DEFAULT_COLOR, DEFAULT_COLOR);
+	parseStack.emplace(SVGCoroutine(parse(facePath)), glm::mat4(1.0), colors, initFace, initEdge);
 	
 	const float svgWidth = X_OFF;
 	const float svgHeight = 21;
@@ -497,28 +548,16 @@ int main(int argc, const char * argv[]) {
 					glm::mat4 localTransform(glm::make_mat4(data));
 					
 					std::replace(rawName.begin(), rawName.end(), '\\', '/');
-					
 					fs::path name(rawName);
 					name.make_preferred();
-					fs::path includedPath = (primsPath / name);
-					if(!fs::exists(includedPath)) {
-						includedPath = (partsPath / name);
-						
-						if(!fs::exists(includedPath)) {
-							includedPath = (modelsPath / name);
-							
-							if(!fs::exists(includedPath)) {
-								std::cerr << "Warning: couldn't find " << name << " in " << ldPath.native() << std::endl;
-								break;
-							}
-						}
-						
+					if(auto maybeIncludedPath = install.find(name);
+					   maybeIncludedPath) {
+						// colors should be getting copy-constructed
+						parseStack.emplace(SVGCoroutine(parse(std::get<1>(*maybeIncludedPath))), transform * localTransform, colors, newFaceColor, newEdgeColor);
 					}
-					
-					// colors should be getting copy-constructed
-					parseStack.emplace(SVGCoroutine(parse(includedPath)), transform * localTransform, colors, newFaceColor, newEdgeColor);
 				} break;
 				case 2: {
+					//*
 					auto& [colorRef, line] = std::get<2>(command);
 					ColorData color = bindColor(colorRef, colors, faceColor, edgeColor).value_or(DEFAULT_COLOR);
 					
@@ -527,13 +566,14 @@ int main(int argc, const char * argv[]) {
 					glm::vec4 s(std::make_from_tuple<glm::vec3>(source), 1.);
 					glm::vec4 t(std::make_from_tuple<glm::vec3>(term), 1.);
 					
-					s = transform * s;
-					t = transform * t;
+					auto sProj = unwrap_cylinder(transform * s);
+					auto tProj = unwrap_cylinder(transform * t);
 					
-					auto sProj = unwrap_cylinder(s);
-					auto tProj = unwrap_cylinder(t);
+					if(sProj && tProj) {
+						svgToroidalLine(color, *sProj, *tProj);
+					}
 					
-					svgToroidalLine(color, sProj, tProj);
+				//*/
 				} break;
 				case 3: {
 					auto& [colorRef, tri] = std::get<3>(command);
@@ -545,11 +585,14 @@ int main(int argc, const char * argv[]) {
 					glm::vec4 v1(std::make_from_tuple<glm::vec3>(p1), 1.);
 					glm::vec4 v2(std::make_from_tuple<glm::vec3>(p2), 1.);
 					
-					glm::vec2 pr0 = unwrap_cylinder(v0);
-					glm::vec2 pr1 = unwrap_cylinder(v1);
-					glm::vec2 pr2 = unwrap_cylinder(v2);
+					auto pr0 = unwrap_cylinder(transform * v0);
+					auto pr1 = unwrap_cylinder(transform * v1);
+					auto pr2 = unwrap_cylinder(transform * v2);
 					
-					std::vector<glm::vec2> triP({pr0, pr1, pr2});
+					std::vector<glm::vec2> triP;
+					if(pr0){ triP.push_back(*pr0); };
+					if(pr1){ triP.push_back(*pr1); };
+					if(pr2){ triP.push_back(*pr2); };
 					pruneDegenerate(triP);
 					svgToroidalPolygon(color, triP);
 				} break;
@@ -564,12 +607,16 @@ int main(int argc, const char * argv[]) {
 					glm::vec4 v2(std::make_from_tuple<glm::vec3>(p2), 1.);
 					glm::vec4 v3(std::make_from_tuple<glm::vec3>(p3), 1.);
 					
-					glm::vec2 pr0 = unwrap_cylinder(v0);
-					glm::vec2 pr1 = unwrap_cylinder(v1);
-					glm::vec2 pr2 = unwrap_cylinder(v2);
-					glm::vec2 pr3 = unwrap_cylinder(v3);
+					auto pr0 = unwrap_cylinder(transform * v0);
+					auto pr1 = unwrap_cylinder(transform * v1);
+					auto pr2 = unwrap_cylinder(transform * v2);
+					auto pr3 = unwrap_cylinder(transform * v3);
 					
-					std::vector<glm::vec2> quadP({pr0, pr1, pr2, pr3});
+					std::vector<glm::vec2> quadP;
+					if(pr0){ quadP.push_back(*pr0); };
+					if(pr1){ quadP.push_back(*pr1); };
+					if(pr2){ quadP.push_back(*pr2); };
+					if(pr3){ quadP.push_back(*pr3); };
 					pruneDegenerate(quadP);
 					svgToroidalPolygon(color, quadP);
 					
@@ -584,29 +631,6 @@ int main(int argc, const char * argv[]) {
 	}
 	
 	fmt::printf("</svg>\n");
-	
-	//LDParse::ModelBuilder<LDParse::ErrF> modelBuilder(errF);
-	//LDParse::Model * model = modelBuilder.construct(fileName, fileName, file, colors);
-	
-	/*
-	 
-	 std::cout << "Model " << fileName << " is " << (isMPD ? "" : "not ") << " an MPD" << std::endl;
-	 if(isMPD) std::cout << "\t" << "root model is " << rootName << std::endl << std::endl;
-	 
-	 for(auto it = models.begin(); it != models.end(); ++it){
-	 if(isMPD) std::cout << "// " << (it->first.compare(rootName) ? "sub" : "root") << "-model, " << it->first << std::endl << std::endl;
-	 for(auto fIt = it->second.begin(); fIt != it->second.end(); ++fIt){
-	 for(size_t i = 0; i < fIt->size(); i++){
-	 std::cout << (*fIt)[i];
-	 }
-	 std::cout << std::endl;
-	 }
-	 std::cout << std::endl << std::endl;
-	 }
-	 
-	 */
-	
-	
 	
 	return 0;
 }

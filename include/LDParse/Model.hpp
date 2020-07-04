@@ -12,6 +12,7 @@
 #include "Cache.hpp"
 #include "Color.hpp"
 #include "Geom.hpp"
+#include "Install.hpp"
 #include "Lex.hpp"
 #include "Parse.hpp"
 
@@ -23,16 +24,6 @@
 namespace LDParse{
 
 	using LDMesh = Mesh<Position, Position, uint32_t>;
-	
-	enum SrcType : uint8_t {
-		ConfigT = 0,
-		PrimitiveT = 1,
-		PartT = 2,
-		ModelT = 3,
-		MPDRootT = 4,
-		MPDSubT = 5,
-		UnknownT = 6
-	};
 	
 	enum BFCStatus : int8_t {
 		BFCOff = -1,

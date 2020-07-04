@@ -31,6 +31,7 @@ include_directories(
 
 file(GLOB_RECURSE LDPARSE_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/include/LDParse/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/LDParse/*.cpp)
 add_library(LDParse SHARED ${LDPARSE_SOURCE})
+target_link_libraries(LDParse Boost::filesystem)
 
 add_subdirectory(face-unwrapper)
 add_subdirectory(parsetest)

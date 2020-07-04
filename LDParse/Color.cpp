@@ -20,8 +20,8 @@ namespace LDParse {
 	const uint8_t& RGB::b() const { return (*this)[2]; }
 	
 	void RGB::setFromHex(uint32_t rgb) {
-		r() = rgb & 0x00FF0000;
-		g() = rgb & 0x0000FF00;
+		r() = (rgb & 0x00FF0000) >> 16;
+		g() = (rgb & 0x0000FF00) >> 8;
 		b() = rgb & 0x000000FF;
 	}
 	
