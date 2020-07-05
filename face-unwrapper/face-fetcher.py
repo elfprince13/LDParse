@@ -7,9 +7,11 @@ from bs4 import BeautifulSoup
 import re
 
 import time
+import json
 
 headers = {'User-Agent':"Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11"}
-encoding = re.compile(r"^Content-Type: text/html;charset=(.*)$",flags=re.MULTILINE)
+encoding = re.compile(r"^Content-Type: text/html;\s*charset=(.*)$",flags=re.MULTILINE | re.IGNORECASE)
+json_encoding = re.compile(r"^Content-Type: application/json;\s*charset=(.*)$",flags=re.MULTILINE | re.IGNORECASE)
 colorID = re.compile(r"colorID=([0-9]+)")
 partID = re.compile(r"P=([0-9a-z]+)",flags=re.IGNORECASE)
 colorCode = re.compile(r"background-color: #([0-9a-fA-F]{6})")
@@ -17,16 +19,13 @@ brickLinkID = re.compile(r"^0 !KEYWORDS .*Bricklink.+(3626[a-z0-9]+)",flags=re.M
 allKeyWords = re.compile(r"^0 !KEYWORDS (.+)",flags=re.MULTILINE | re.IGNORECASE)
 numericPrefix = re.compile(r"^([0-9]+).*")
 
-def extractBestMatch(html, keyWords, nameNum):
-	soup = BeautifulSoup(html,"lxml")
-	partResults = soup.find(id="_idItemTableForP")
-	if not partResults:
-		error = soup.find(id="idNoResults")
-		print(error.find("h4").get_text().strip())
-		return None
-	else:
-		results = [(partID.search(res.get("href")).group(1),txtToKeyWords(res.get_text().replace("\n","")))
-			for res in partResults.find_all("a","pspItemNameLink")]
+def extractBestMatch(jsonSrc, keyWords, nameNum):
+	data = json.loads(jsonSrc)
+	try:
+		data = data['result']['typeList'][0]['items']
+		results = [(result['strItemNo'],txtToKeyWords(result['strItemName'].replace("\n","")))
+			for result in data if result['typeItem'].lower() == 'p']
+
 		
 		bestResult = 0
 		bestName = None
@@ -42,6 +41,9 @@ def extractBestMatch(html, keyWords, nameNum):
 			else:
 				print("\tSkipping ineligible")
 		return bestName
+	except LookupError:
+		print(data)
+		return None
 
 def extractKnownColors(html):
 	soup = BeautifulSoup(html,"lxml")
@@ -54,11 +56,12 @@ def extractKnownColors(html):
 							 color_entries.find_all("span","pciColorTabListItem"))]
 
 bl_direct_url = "https://www.bricklink.com/v2/catalog/catalogitem.page?P=%s#T=C"
-bl_search_url = "https://www.bricklink.com/v2/search.page?%s#T=P"
+bl_search_url = "https://www.bricklink.com/ajax/clone/search/searchproduct.ajax?%s"
 
 wait_for = 0.5
-def fetchPartPage(partURL):
+def fetchPartPage(partName):
 	global wait_for
+	partURL = bl_direct_url % partName
 	with urlopen(Request(partURL,headers=headers)) as bl_result:
 			status = bl_result.getcode()
 			print("HTTP Status %d" % status)
@@ -79,7 +82,8 @@ def fetchPartPage(partURL):
 					time.sleep(wait_for)
 	return None
 
-def fetchSearchPage(searchURL):
+def fetchSearchPage(searchTerms):
+	searchURL = bl_search_url %  urlencode({'q': searchTerms, 'rpp':500})
 	print(searchURL)
 	global wait_for
 	with urlopen(Request(searchURL,headers=headers)) as bl_result:
@@ -88,7 +92,7 @@ def fetchSearchPage(searchURL):
 			if bl_result.geturl() == searchURL:
 				if status == 200:
 					info = bl_result.info()
-					charset = encoding.search(str(info)).group(1)
+					charset = json_encoding.search(str(info)).group(1)
 					return bl_result.read().decode(charset)
 				else:
 					wait_for *= 2
@@ -122,8 +126,8 @@ def main(faces):
 		nameNum = int(numericPrefix.match(name).group(1))
 		print(name, nameNum)
 		
-		#data = fetchPartPage(bl_direct_url % name)
-		if False and data:
+		data = fetchPartPage(name)
+		if data:
 			print(extractKnownColors(data))
 		else:
 			model=""
@@ -133,7 +137,7 @@ def main(faces):
 			if maybeName:
 				name = maybeName.group(1)
 				print("Model source specifies Bricklink %s" % name)
-				data = fetchPartPage(bl_direct_url % name)
+				data = fetchPartPage(name)
 				if data:
 					print(extractKnownColors(data))
 				else:
@@ -154,19 +158,17 @@ def main(faces):
 				if maybeMoreKeyWords:
 					keyWords |= txtToKeyWords(maybeMoreKeyWords.group(1))
 					
-				searchData = fetchSearchPage(bl_search_url % urlencode({'q':nameLine}))
+				searchData = fetchSearchPage(nameLine)
 				if searchData:
 					bestName = extractBestMatch(searchData, keyWords, nameNum)
 					if bestName:
-						data = fetchPartPage(bl_direct_url % bestName)
+						data = fetchPartPage(bestName)
 						if data:
 							print(extractKnownColors(data))
 						else:
 							print("Try to search later")
 				else:
 					print("Try to search later")
-					
-				break
 						
 		time.sleep(0.5)
 			
